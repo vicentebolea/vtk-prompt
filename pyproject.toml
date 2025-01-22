@@ -1,0 +1,21 @@
+[project]
+name = "vtk-prompt"
+version = "0.1.0"
+description = "A project combining VTK visualization with Anthropic's Claude API"
+authors = [
+    {name = "Vicente Adolfo Bolea Sanchez", email = "vicente.bolea@kitware.com"},
+]
+dependencies = [
+    "vtk>=9.3.1",
+    "anthropic",
+]
+requires-python = ">=3.8"
+readme = "README.md"
+license = {text = "MIT"}
+
+[project.scripts]
+vtk-prompt = "vtk_prompt.prompt:parse_args"
+
+[tool.black]
+
+include = 'src/.*.py$'
