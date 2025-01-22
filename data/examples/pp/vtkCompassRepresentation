@@ -1,0 +1,6 @@
+    compassRepresentation = vtkCompassRepresentation()
+
+    compassWidget = vtkCompassWidget()
+    compassWidget.SetInteractor(renderWindowInteractor)
+    compassWidget.SetRepresentation(compassRepresentation)
+    

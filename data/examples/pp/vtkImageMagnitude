@@ -1,0 +1,6 @@
+    mag = vtkImageMagnitude()
+    mag.SetInputConnection(fft.GetOutputPort())
+
+    center = vtkImageFourierCenter()
+    center.SetInputConnection(mag.GetOutputPort())
+

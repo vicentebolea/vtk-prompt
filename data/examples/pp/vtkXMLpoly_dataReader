@@ -1,0 +1,27 @@
+        reader = vtkXMLpoly_dataReader()
+        reader.SetFileName(file_name)
+        reader.Update()
+        poly_data = reader.GetOutput()
+    elif extension == '.obj':
+        reader = vtkOBJReader()
+--
+        reader = vtkXMLpoly_dataReader()
+        reader.SetFileName(file_name)
+        reader.Update()
+        poly_data = reader.GetOutput()
+    elif extension == '.obj':
+        reader = vtkOBJReader()
+--
+        reader = vtkXMLpoly_dataReader()
+        reader.SetFileName(file_name)
+        reader.Update()
+        poly_data = reader.GetOutput()
+    elif extension == '.obj':
+        reader = vtkOBJReader()
+--
+        reader = vtkXMLpoly_dataReader()
+        reader.SetFileName(file_name)
+        reader.Update()
+        poly_data = reader.GetOutput()
+    elif extension == '.obj':
+        reader = vtkOBJReader()

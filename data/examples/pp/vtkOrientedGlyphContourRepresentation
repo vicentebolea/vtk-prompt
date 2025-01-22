@@ -1,0 +1,6 @@
+    contourRep = vtkOrientedGlyphContourRepresentation()
+    contourRep.GetLinesProperty().SetColor(colors.GetColor3d('Red'))
+
+    contourWidget = vtkContourWidget()
+    contourWidget.SetInteractor(interactor)
+    contourWidget.SetRepresentation(contourRep)

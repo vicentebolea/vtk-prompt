@@ -1,0 +1,6 @@
+    sphereWidget = vtkSphereWidget()
+    sphereWidget.SetInteractor(interactor)
+    sphereWidget.SetRepresentationToSurface()
+    sphereWidget.GetSphereProperty().SetColor(colors.GetColor3d("BurlyWood"))
+
+    # Connect the event to a function

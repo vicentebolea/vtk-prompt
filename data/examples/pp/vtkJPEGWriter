@@ -1,0 +1,34 @@
+            writer = vtkJPEGWriter()
+        elif ext == '.pnm':
+            writer = vtkPNMWriter()
+        elif ext == '.ps':
+            if rgba:
+                rgba = False
+--
+                writer = vtkJPEGWriter()
+            else:
+                writer = vtkPNGWriter()
+            writer.SetFileName(self.path)
+            writer.SetInputData(w2if.GetOutput())
+            writer.Write()
+--
+                writer = vtkJPEGWriter()
+            else:
+                writer = vtkPNGWriter()
+            writer.SetFileName(self.path)
+            writer.SetInputData(w2if.GetOutput())
+            writer.Write()
+--
+                writer = vtkJPEGWriter()
+            else:
+                writer = vtkPNGWriter()
+            writer.SetFileName(self.path)
+            writer.SetInputData(w2if.GetOutput())
+            writer.Write()
+--
+            writer = vtkJPEGWriter()
+        elif ext == '.pnm':
+            writer = vtkPNMWriter()
+        elif ext == '.ps':
+            if rgba:
+                rgba = False

@@ -1,0 +1,6 @@
+    con = vtkImageSeedConnectivity()
+    con.SetInputConnection(reader.GetOutputPort())
+    con.AddSeed(300, 200)
+    con.SetInputConnectValue(0)
+    con.SetOutputConnectedValue(0)
+    con.SetOutputUnconnectedValue(255)

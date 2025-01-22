@@ -1,0 +1,6 @@
+    earthSource = vtkEarthSource()
+    earthSource.OutlineOn()
+    earthSource.Update()
+    r = earthSource.GetRadius()
+
+    # Create a sphere

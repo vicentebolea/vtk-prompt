@@ -1,0 +1,6 @@
+    # actors = vtkActorCollection()
+    actors = renderer.GetActors()
+    print('There are', actors.GetNumberOfItems(), 'actors.')
+
+    renWin.SetWindowName('3DSImporter')
+    renWin.Render()

@@ -1,0 +1,13 @@
+            writer = vtkPNMWriter()
+        elif ext == '.ps':
+            if rgba:
+                rgba = False
+            writer = vtkPostScriptWriter()
+        elif ext == '.tiff':
+--
+            writer = vtkPNMWriter()
+        elif ext == '.ps':
+            if rgba:
+                rgba = False
+            writer = vtkPostScriptWriter()
+        elif ext == '.tiff':

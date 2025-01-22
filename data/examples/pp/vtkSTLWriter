@@ -1,0 +1,6 @@
+    stlWriter = vtkSTLWriter()
+    stlWriter.SetFileName(filename)
+    stlWriter.SetInputConnection(sphereSource.GetOutputPort())
+    stlWriter.Write()
+
+    # Read and display for verification

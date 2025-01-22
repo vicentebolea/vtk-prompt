@@ -1,0 +1,13 @@
+    color = vtkVectorDot()
+    color.SetInputConnection(normals.GetOutputPort())
+
+    lut = vtkLookupTable()
+    MakeLUT(color_scheme, lut)
+
+--
+    color = vtkVectorDot()
+    color.SetInputConnection(warp.GetOutputPort())
+    plateMapper = vtkDataSetMapper()
+    plateMapper.SetInputConnection(warp.GetOutputPort())
+    plateActor = vtkActor()
+    plateActor.SetMapper(plateMapper)

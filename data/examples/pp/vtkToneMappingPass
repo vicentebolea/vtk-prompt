@@ -1,0 +1,20 @@
+    tone_mapping_p = vtkToneMappingPass()
+    tone_mapping_p.SetDelegatePass(camera_p)
+
+    if use_tonemapping:
+        ren2.SetPass(tone_mapping_p)
+
+--
+    tone_mapping_p = vtkToneMappingPass()
+    tone_mapping_p.SetDelegatePass(camera_p)
+
+    if use_tonemapping:
+        ren2.SetPass(tone_mapping_p)
+
+--
+    tone_mapping_p = vtkToneMappingPass()
+    tone_mapping_p.SetDelegatePass(camera_p)
+
+    if use_tonemapping:
+        ren2.SetPass(tone_mapping_p)
+

@@ -1,0 +1,6 @@
+    dobj = vtkDataObject()
+    dobj.GetFieldData().AddArray(bitter)
+    dobj.GetFieldData().AddArray(crispy)
+    dobj.GetFieldData().AddArray(crunchy)
+    dobj.GetFieldData().AddArray(salty)
+    dobj.GetFieldData().AddArray(oily)

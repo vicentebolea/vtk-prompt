@@ -1,0 +1,6 @@
+    arrowSource = vtkGlyphSource2D()
+    arrowSource.SetGlyphTypeToEdgeArrow()
+    arrowSource.SetScale(0.1)
+    arrowSource.Update()
+
+    # Use Glyph3D to repeat the glyph on all edges.

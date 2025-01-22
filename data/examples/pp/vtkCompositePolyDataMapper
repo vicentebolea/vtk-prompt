@@ -1,0 +1,6 @@
+    mapper = vtkCompositePolyDataMapper()
+    mapper.SetInputDataObject(mbds)
+    cdsa = vtkCompositeDataDisplayAttributes()
+    mapper.SetCompositeDataDisplayAttributes(cdsa)
+
+    # You can use the vtkCompositeDataDisplayAttributes to set the color,

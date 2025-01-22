@@ -1,0 +1,13 @@
+            writer = vtkBMPWriter()
+        elif ext == '.jpg':
+            writer = vtkJPEGWriter()
+        elif ext == '.pnm':
+            writer = vtkPNMWriter()
+        elif ext == '.ps':
+--
+            writer = vtkBMPWriter()
+        elif ext == '.jpg':
+            writer = vtkJPEGWriter()
+        elif ext == '.pnm':
+            writer = vtkPNMWriter()
+        elif ext == '.ps':

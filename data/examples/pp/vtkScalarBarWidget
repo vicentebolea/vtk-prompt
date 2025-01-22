@@ -1,0 +1,6 @@
+    scalar_bar_widget = vtkScalarBarWidget()
+    scalar_bar_widget.SetInteractor(interactor)
+    scalar_bar_widget.SetScalarBarActor(scalar_bar)
+    scalar_bar_widget.On()
+
+    interactor.Initialize()

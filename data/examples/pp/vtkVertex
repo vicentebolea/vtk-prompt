@@ -1,0 +1,13 @@
+    vertex = vtkVertex()
+    for i in range(0, number_of_vertices):
+        vertex.GetPointIds().SetId(i, i)
+
+    ug = vtkUnstructuredGrid()
+    ug.SetPoints(points)
+--
+    vertex = vtkVertex()
+    vertex.GetPointIds().SetId(0, 0)
+
+    vertices = vtkCellArray()
+    vertices.InsertNextCell(vertex)
+

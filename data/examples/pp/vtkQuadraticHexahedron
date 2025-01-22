@@ -1,0 +1,13 @@
+    aHexahedron = vtkQuadraticHexahedron()
+    points = vtkPoints()
+
+    pcoords = aHexahedron.GetParametricCoords()
+    rng = vtkMinimalStandardRandomSequence()
+    points.SetNumberOfPoints(aHexahedron.GetNumberOfPoints())
+--
+    aHexahedron = vtkQuadraticHexahedron()
+    points = vtkPoints()
+
+    pcoords = aHexahedron.GetParametricCoords()
+    rng = vtkMinimalStandardRandomSequence()
+    points.SetNumberOfPoints(aHexahedron.GetNumberOfPoints())

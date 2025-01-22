@@ -1,0 +1,6 @@
+    boxSource = vtkTessellatedBoxSource()
+    boxSource.SetLevel(3)
+    boxSource.QuadsOn()
+    boxSource.SetBounds(bounds)
+    boxSource.SetOutputPointsPrecision(vtkAlgorithm.SINGLE_PRECISION)
+

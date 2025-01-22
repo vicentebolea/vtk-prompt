@@ -1,0 +1,6 @@
+    style = vtkInteractorStyleTrackballActor()
+    iren.SetInteractorStyle(style)
+
+    # create source
+    sphereSource = vtkSphereSource()
+

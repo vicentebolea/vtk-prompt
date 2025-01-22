@@ -1,0 +1,20 @@
+    skybox = vtkOpenGLSkybox()
+
+    irradiance = ren.GetEnvMapIrradiance()
+    irradiance.SetIrradianceStep(0.3)
+
+    # Choose how to generate the skybox.
+--
+    skybox = vtkOpenGLSkybox()
+
+    irradiance = ren.GetEnvMapIrradiance()
+    irradiance.SetIrradianceStep(0.3)
+
+    # Choose how to generate the skybox.
+--
+    skybox = vtkOpenGLSkybox()
+
+    irradiance = ren.GetEnvMapIrradiance()
+    irradiance.SetIrradianceStep(0.3)
+
+    # Choose how to generate the skybox.

@@ -1,0 +1,8 @@
+    graphLayoutView = vtkGraphLayoutView()
+
+    layout = vtkGraphLayout()
+    strategy = vtkSimple2DLayoutStrategy()
+    layout.SetInputData(g)
+    layout.SetLayoutStrategy(strategy)
+
+    # Tell the view to use the vertex layout we provide

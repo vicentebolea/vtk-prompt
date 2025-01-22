@@ -1,0 +1,1 @@
+b = vtkVariantEqual(v1, v2)

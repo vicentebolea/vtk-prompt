@@ -1,0 +1,6 @@
+    circularLayoutStrategy = vtkCircularLayoutStrategy()
+
+    graphLayoutView = vtkGraphLayoutView()
+    graphLayoutView.AddRepresentationFromInput(g)
+
+    graphLayoutView.SetLayoutStrategy(circularLayoutStrategy)

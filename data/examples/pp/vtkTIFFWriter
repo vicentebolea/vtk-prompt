@@ -1,0 +1,13 @@
+            writer = vtkTIFFWriter()
+        else:
+            writer = vtkPNGWriter()
+
+        windowto_image_filter = vtkWindowToImageFilter()
+        windowto_image_filter.SetInput(renWin)
+--
+            writer = vtkTIFFWriter()
+        else:
+            writer = vtkPNGWriter()
+
+        windowto_image_filter = vtkWindowToImageFilter()
+        windowto_image_filter.SetInput(renWin1)

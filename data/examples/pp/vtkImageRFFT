@@ -1,0 +1,13 @@
+    idealRfft = vtkImageRFFT()
+    idealRfft.SetInputConnection(idealHighPass.GetOutputPort())
+
+    idealReal = vtkImageExtractComponents()
+    idealReal.SetInputConnection(idealRfft.GetOutputPort())
+    idealReal.SetComponents(0)
+--
+    butterworthRfft = vtkImageRFFT()
+    butterworthRfft.SetInputConnection(butterworthHighPass.GetOutputPort())
+
+    butterworthReal = vtkImageExtractComponents()
+    butterworthReal.SetInputConnection(butterworthRfft.GetOutputPort())
+    butterworthReal.SetComponents(0)
