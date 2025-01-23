@@ -74,7 +74,7 @@ def load_class_snippets(vtkclass):
     return output + f"</{vtkclass}>"
 
 
-def anthropic_query(message, model, token, max_tokens, enable_rag):
+def anthropic_query(message, model, token, max_tokens, enable_rag, verbose):
     """Run the query using the Anthropic API"""
     vtk_classes = str()
     with open("data/examples/index.json") as f:
@@ -87,10 +87,19 @@ def anthropic_query(message, model, token, max_tokens, enable_rag):
         tools_ops = tools
     client = Anthropic(api_key=token)
 
+    num_tokens = client.messages.count_tokens(
+        model=model,
+        system=ROLE_PROMOTION,
+        messages=[{"role": "user", "content": context}],
+        tools=tools_ops,
+    )
+    if verbose:
+        print(f"Number of tokens: {num_tokens}")
+
     response = client.messages.create(
         model=model,
         system=ROLE_PROMOTION,
-        max_tokens=1000,
+        max_tokens=num_tokens.input_tokens,
         messages=[{"role": "user", "content": context}],
         tools=tools_ops,
     )
@@ -105,10 +114,9 @@ def anthropic_query(message, model, token, max_tokens, enable_rag):
                     for class_ in classes.split(","):
                         output = load_class_snippets(class_)
 
-        response = client.messages.create(
+        num_tokens = client.messages.count_tokens(
             model=model,
             system=ROLE_PROMOTION,
-            max_tokens=4096,
             messages=[
                 {"role": "user", "content": context},
                 {"role": "assistant", "content": response.content},
@@ -122,7 +130,31 @@ def anthropic_query(message, model, token, max_tokens, enable_rag):
                         }
                     ],
                 },
-                {"role": "assistant", "content": "import vtk" },
+                {"role": "assistant", "content": "import vtk"},
+            ],
+            tools=tools,
+        )
+        if verbose:
+            print(f"Number of tokens: {num_tokens}")
+
+        response = client.messages.create(
+            model=model,
+            system=ROLE_PROMOTION,
+            max_tokens=8192,
+            messages=[
+                {"role": "user", "content": context},
+                {"role": "assistant", "content": response.content},
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": tool_use_id,
+                            "content": output,
+                        }
+                    ],
+                },
+                {"role": "assistant", "content": "import vtk"},
             ],
             tools=tools,
         )
@@ -133,7 +165,7 @@ def anthropic_query(message, model, token, max_tokens, enable_rag):
     return response.content[0].text
 
 
-def run_code(code_string):
+def run_code(code_string, verbose):
     """Execute VTK code using exec()"""
     # Remove notes before the import
     pos = code_string.find("import vtk")
@@ -141,11 +173,14 @@ def run_code(code_string):
         code_string = code_string[pos:]
 
     code_segment = "import vtk\n" + code_string
+    if verbose:
+        print(code_segment)
     try:
         exec(code_segment, globals(), {})
     except Exception as e:
         print(f"Error executing code: {e}")
-        print(code_segment)
+        if not verbose:
+            print(code_segment)
         return None
 
 
@@ -169,9 +204,18 @@ def parse_args():
     parser.add_argument(
         "-r", "--rag", action="store_true", default=False, help="Use experimental RAG"
     )
+
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", default=False, help="Show source code"
+    )
     args = parser.parse_args()
 
     code = anthropic_query(
-        args.input_string, args.model, args.token, args.max_tokens, args.rag
+        args.input_string,
+        args.model,
+        args.token,
+        args.max_tokens,
+        args.rag,
+        args.verbose,
     )
-    run_code(code)
+    run_code(code, args.verbose)

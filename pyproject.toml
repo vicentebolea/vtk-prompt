@@ -15,6 +15,7 @@ license = {text = "MIT"}
 
 [project.scripts]
 vtk-prompt = "vtk_prompt.prompt:parse_args"
+gen-vtk-file = "vtk_prompt.generate_files:parse_args"
 
 [tool.black]
 
