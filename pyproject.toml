@@ -1,22 +1,37 @@
 [project]
 name = "vtk-prompt"
 version = "0.1.0"
-description = "A project combining VTK visualization with Anthropic's Claude API"
+description = "A project combining VTK visualization with LLM APIs (Anthropic, OpenAI, NVIDIA NIM)"
 authors = [
     {name = "Vicente Adolfo Bolea Sanchez", email = "vicente.bolea@kitware.com"},
 ]
 dependencies = [
     "vtk>=9.3.1",
     "anthropic",
+    "openai>=1.0.0",
+    "importlib_resources>=5.0.0",
 ]
 requires-python = ">=3.8"
 readme = "README.md"
 license = {text = "MIT"}
 
+[project.optional-dependencies]
+rag = [
+    "chromadb>=0.6.3",
+    "llama_index-core>=0.12.17",
+    "llama-index-llms-anthropic>=0.6.7",
+    "llama-index-llms-openai>=0.3.20",
+    "sentence-transformers>=3.4.1",
+    "tree_sitter_languages>=1.9.1",
+    "tree_sitter<0.22",
+    "tqdm>=4.67.1",
+]
+
 [project.scripts]
 vtk-prompt = "vtk_prompt.prompt:parse_args"
 gen-vtk-file = "vtk_prompt.generate_files:parse_args"
+vtk-build-rag = "vtk_prompt.build_rag_db:main"
+vtk-test-rag = "vtk_prompt.test_rag:main"
 
 [tool.black]
-
 include = 'src/.*.py$'
