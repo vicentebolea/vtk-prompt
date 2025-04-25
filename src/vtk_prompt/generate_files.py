@@ -1,6 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env python3
 
 from anthropic import Anthropic
+from pathlib import Path
 import argparse
 import os
 import json
@@ -8,6 +9,7 @@ import json
 PYTHON_VERSION = ">=3.10"
 VTK_VERSION = "9.3"
 
+# Context template for prompting the AI to generate VTK XML files
 CONTEXT = f"""
 Write only text that is the content of a XML VTK file.
 
@@ -17,10 +19,10 @@ Write only text that is the content of a XML VTK file.
 </instructions>
 
 <output>
-- Only output verbatin python code.
+- Only output verbatim XML content.
 - No explanations
-- No ```python marker.
-<\output>
+- No markup or code blocks
+</output>
 
 <example>
 input: A VTP file example of a 4 points with temperature and pressure data
@@ -93,20 +95,34 @@ Request:
 [DESCRIPTION]
 """
 
-
-ROLE_PROMOTION = f"You are a XML VTK file generator, the generated file will be read by VTK file reader"
+# System prompt for the AI
+ROLE_PROMOTION = "You are a XML VTK file generator, the generated file will be read by VTK file reader"
 
 
 def anthropic_query(message, model, token, max_tokens):
-    """Run the query using the Anthropic API"""
-    vtk_classes = str()
-    with open("data/examples/index.json") as f:
-        vtk_classes = " ".join(list(json.load(f).keys()))
+    """Run the query using the Anthropic API to generate VTK XML content.
 
+    Args:
+        message: The user's description of the VTK file to generate
+        model: The model to use
+        token: The API token
+        max_tokens: Maximum tokens to generate
+
+    Returns:
+        The generated XML content
+    """
+    # Load available VTK classes for context
+    examples_path = Path("data/examples/index.json")
+    if examples_path.exists():
+        vtk_classes = " ".join(json.loads(examples_path.read_text()).keys())
+    else:
+        vtk_classes = ""
+
+    # Prepare the context with the user's description
     context = CONTEXT.replace("[DESCRIPTION]", message)
-    tools_ops = []
-    client = Anthropic(api_key=token)
 
+    # Initialize the client and make the API call
+    client = Anthropic(api_key=token)
     response = client.messages.create(
         model=model,
         system=ROLE_PROMOTION,
@@ -114,27 +130,62 @@ def anthropic_query(message, model, token, max_tokens):
         messages=[{"role": "user", "content": context}],
     )
 
+    # Return the generated XML content
     return response.content[0].text
 
 
 def parse_args():
-    """Parse the command line arguments"""
-    parser = argparse.ArgumentParser(prog="vtk-prompt", description="VTK LLM prompt")
-    parser.add_argument("input_string")
+    """Parse command line arguments and generate VTK XML file content."""
+    parser = argparse.ArgumentParser(
+        prog="gen-vtk-file", description="Generate VTK XML file content using LLMs"
+    )
+
+    parser.add_argument("input_string", help="Description of the VTK file to generate")
     parser.add_argument(
-        "-m", "--model", default="claude-3-5-haiku-latest", help="Model to run AI"
+        "-m",
+        "--model",
+        default="claude-3-5-haiku-latest",
+        help="Model to use for generation",
     )
     parser.add_argument(
         "-t",
         "--token",
         default=os.environ.get("ANTHROPIC_API_KEY"),
-        help="Token for Anthropic",
+        help="API token for Anthropic (defaults to ANTHROPIC_API_KEY environment variable)",
     )
     parser.add_argument(
-        "-k", "--max-tokens", type=int, default=1000, help="Max # of tokens"
+        "-k",
+        "--max-tokens",
+        type=int,
+        default=4000,
+        help="Maximum number of tokens to generate",
+    )
+    parser.add_argument(
+        "-o", "--output", help="Output file path (if not specified, output to stdout)"
     )
 
     args = parser.parse_args()
 
-    code = anthropic_query(args.input_string, args.model, args.token, args.max_tokens)
-    print(code)
+    # Validate token
+    if not args.token:
+        print(
+            "Error: No API token provided. Set ANTHROPIC_API_KEY environment variable or use --token"
+        )
+        exit(1)
+
+    # Generate the VTK XML content
+    xml_content = anthropic_query(
+        args.input_string, args.model, args.token, args.max_tokens
+    )
+
+    # Output to file or stdout
+    if args.output:
+        with open(args.output, "w") as f:
+            f.write(xml_content)
+        print(f"VTK XML content written to {args.output}")
+    else:
+        print(xml_content)
+
+
+if __name__ == "__main__":
+    parse_args()

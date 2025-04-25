@@ -7,11 +7,11 @@ authors = [
 ]
 dependencies = [
     "vtk>=9.3.1",
-    "anthropic",
+    "anthropic>=0.22.0",
     "openai>=1.0.0",
     "importlib_resources>=5.0.0",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 readme = "README.md"
 license = {text = "MIT"}
 
@@ -23,7 +23,8 @@ rag = [
     "llama-index-llms-openai>=0.3.20",
     "sentence-transformers>=3.4.1",
     "tree_sitter_languages>=1.9.1",
-    "tree_sitter<0.22",
+    "tree_sitter>=0.23",
+    "tree_sitter_language_pack>=0.7.0",
     "tqdm>=4.67.1",
 ]
 
