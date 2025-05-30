@@ -8,9 +8,10 @@ import json
 import sys
 import openai
 import importlib.util
+import vtk
 
 PYTHON_VERSION = ">=3.10"
-VTK_VERSION = "9.3"
+VTK_VERSION = vtk.__version__
 
 CONTEXT_BASE = f"""
 Write only python source code that uses VTK.
@@ -20,7 +21,7 @@ Write only python source code that uses VTK.
 - DO NOT DEFINE FUNCTIONS
 - NO TEXT, ONLY SOURCE CODE
 - ONLY import VTK and numpy if needed
-- Only use {VTK_VERSION=} basic components.
+- Only use {VTK_VERSION=} python basic components.
 - Only use {PYTHON_VERSION=} or above.
 </instructions>
 
@@ -381,7 +382,9 @@ def parse_args():
     parser = argparse.ArgumentParser(
         prog="vtk-prompt", description="Generate and execute VTK code using LLMs"
     )
-    parser.add_argument("input_string", help="The code description to generate VTK code for")
+    parser.add_argument(
+        "input_string", help="The code description to generate VTK code for"
+    )
 
     # Provider selection
     provider_group = parser.add_argument_group("LLM Provider")

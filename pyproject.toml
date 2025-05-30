@@ -10,6 +10,9 @@ dependencies = [
     "anthropic>=0.22.0",
     "openai>=1.0.0",
     "importlib_resources>=5.0.0",
+    "trame>=3.9.0",
+    "trame-vuetify",
+    "trame-vtk>=2.8.0",
 ]
 requires-python = ">=3.10"
 readme = "README.md"
@@ -33,6 +36,7 @@ vtk-prompt = "vtk_prompt.prompt:parse_args"
 gen-vtk-file = "vtk_prompt.generate_files:parse_args"
 vtk-build-rag = "vtk_prompt.build_rag_db:main"
 vtk-test-rag = "vtk_prompt.test_rag:main"
+vtk-prompt-ui = "vtk_prompt.vtk_prompt_ui:main"
 
 [tool.black]
 include = 'src/.*.py$'

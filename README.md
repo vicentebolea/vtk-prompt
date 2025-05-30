@@ -1,6 +1,6 @@
 # VTK Prompt
 
-A command-line interface for generating VTK visualization code using LLMs (Anthropic Claude, OpenAI GPT, and NVIDIA NIM).
+A command-line interface and web-based UI for generating VTK visualization code using LLMs (Anthropic Claude, OpenAI GPT, and NVIDIA NIM).
 
 ## Installation
 
@@ -15,6 +15,27 @@ pip install -e ".[rag]"
 ```
 
 ## Usage
+
+### Web UI (Recommended)
+
+Launch the interactive web interface:
+
+```bash
+vtk-prompt-ui
+```
+
+The web UI provides:
+- **Model Selection**: Choose between Claude models (Haiku, Sonnet 4)
+- **Token Control**: Adjust maximum tokens for responses
+- **RAG Integration**: Toggle retrieval-augmented generation
+- **Live VTK Viewer**: See visualizations rendered in real-time
+- **Code Display**: View and copy generated VTK code
+
+Requirements:
+- Set `ANTHROPIC_API_KEY` environment variable
+- Access the UI at `http://localhost:8080` (default)
+
+### Command Line Interface
 
 ```bash
 # Basic usage with Anthropic Claude (default)
