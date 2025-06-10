@@ -361,7 +361,7 @@ class VTKPromptApp:
         self.state.main_drawer = False
 
         with SinglePageWithDrawerLayout(self.server) as layout:
-            layout.title.set_text("VTK Prompt Generator")
+            layout.title.set_text("VTK Prompt UI")
             with layout.toolbar:
                 vuetify.VSpacer()
 
