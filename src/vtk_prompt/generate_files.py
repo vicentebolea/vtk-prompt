@@ -1,191 +1,176 @@
 #!/usr/bin/env python3
 
-from anthropic import Anthropic
 from pathlib import Path
-import argparse
 import os
 import json
+import sys
+import ast
+import openai
+import click
 
-PYTHON_VERSION = ">=3.10"
-VTK_VERSION = "9.3"
-
-# Context template for prompting the AI to generate VTK XML files
-CONTEXT = f"""
-Write only text that is the content of a XML VTK file.
-
-<instructions>
-- NO COMMENTS, ONLY CONTENT OF THE FILE
-- Only use VTK {VTK_VERSION} basic components.
-</instructions>
-
-<output>
-- Only output verbatim XML content.
-- No explanations
-- No markup or code blocks
-</output>
-
-<example>
-input: A VTP file example of a 4 points with temperature and pressure data
-output:
-<?xml version="1.0"?>
-<VTKFile type="PolyData" version="0.1" byte_order="LittleEndian">
-  <PolyData>
-    <Piece NumberOfPoints="4" NumberOfVerts="0" NumberOfLines="0" NumberOfStrips="0" NumberOfPolys="0">
-      <!-- Points coordinates -->
-      <Points>
-        <DataArray type="Float32" NumberOfComponents="3" format="ascii">
-          0.0 0.0 0.0
-          1.0 0.0 0.0
-          0.0 1.0 0.0
-          1.0 1.0 0.0
-        </DataArray>
-      </Points>
-
-      <!-- Point Data (attributes) -->
-      <PointData>
-        <!-- Temperature data for each point -->
-        <DataArray type="Float32" Name="Temperature" format="ascii">
-          25.5
-          26.7
-          24.3
-          27.1
-        </DataArray>
-        <!-- Pressure data for each point -->
-        <DataArray type="Float32" Name="Pressure" format="ascii">
-          101.3
-          101.5
-          101.2
-          101.4
-        </DataArray>
-      </PointData>
-
-      <!-- Cell Data (empty in this case) -->
-      <CellData>
-      </CellData>
-
-      <!-- Vertex definitions (empty in this case) -->
-      <Verts>
-        <DataArray type="Int32" Name="connectivity" format="ascii">
-        </DataArray>
-        <DataArray type="Int32" Name="offsets" format="ascii">
-        </DataArray>
-      </Verts>
-
-      <!-- Line definitions (empty in this case) -->
-      <Lines>
-        <DataArray type="Int32" Name="connectivity" format="ascii">
-        </DataArray>
-        <DataArray type="Int32" Name="offsets" format="ascii">
-        </DataArray>
-      </Lines>
-
-      <!-- Polygon definitions (empty in this case) -->
-      <Polys>
-        <DataArray type="Int32" Name="connectivity" format="ascii">
-        </DataArray>
-        <DataArray type="Int32" Name="offsets" format="ascii">
-        </DataArray>
-      </Polys>
-    </Piece>
-  </PolyData>
-</VTKFile>
-</example>
-
-Request:
-[DESCRIPTION]
-"""
-
-# System prompt for the AI
-ROLE_PROMOTION = "You are a XML VTK file generator, the generated file will be read by VTK file reader"
+# Import our template system
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
+from prompts import (
+    get_vtk_xml_context,
+    get_xml_role,
+)
 
 
-def anthropic_query(message, model, token, max_tokens):
-    """Run the query using the Anthropic API to generate VTK XML content.
+class VTKXMLGenerator:
+    """OpenAI client for VTK XML file generation."""
 
-    Args:
-        message: The user's description of the VTK file to generate
-        model: The model to use
-        token: The API token
-        max_tokens: Maximum tokens to generate
+    def __init__(self, api_key=None, base_url=None):
+        """Initialize the VTK XML generator.
 
-    Returns:
-        The generated XML content
-    """
-    # Load available VTK classes for context
-    examples_path = Path("data/examples/index.json")
-    if examples_path.exists():
-        vtk_classes = " ".join(json.loads(examples_path.read_text()).keys())
-    else:
-        vtk_classes = ""
+        Args:
+            api_key: OpenAI API key (defaults to OPENAI_API_KEY env var)
+            base_url: Optional custom API endpoint URL
+        """
+        self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
+        self.base_url = base_url
 
-    # Prepare the context with the user's description
-    context = CONTEXT.replace("[DESCRIPTION]", message)
+        if not self.api_key:
+            raise ValueError(
+                "No API key provided. Set OPENAI_API_KEY or pass api_key parameter."
+            )
 
-    # Initialize the client and make the API call
-    client = Anthropic(api_key=token)
-    response = client.messages.create(
-        model=model,
-        system=ROLE_PROMOTION,
-        max_tokens=4096,
-        messages=[{"role": "user", "content": context}],
-    )
+        self.client = openai.OpenAI(api_key=self.api_key, base_url=self.base_url)
 
-    # Return the generated XML content
-    return response.content[0].text
+    def generate_xml(self, message, model, max_tokens=4000, temperature=0.7):
+        """Generate VTK XML content from a description."""
+        examples_path = Path("data/examples/index.json")
+        if examples_path.exists():
+            vtk_classes = " ".join(json.loads(examples_path.read_text()).keys())
+        else:
+            vtk_classes = ""
 
+        context = get_vtk_xml_context(message)
 
-def parse_args():
-    """Parse command line arguments and generate VTK XML file content."""
-    parser = argparse.ArgumentParser(
-        prog="gen-vtk-file", description="Generate VTK XML file content using LLMs"
-    )
-
-    parser.add_argument("input_string", help="Description of the VTK file to generate")
-    parser.add_argument(
-        "-m",
-        "--model",
-        default="claude-3-5-haiku-latest",
-        help="Model to use for generation",
-    )
-    parser.add_argument(
-        "-t",
-        "--token",
-        default=os.environ.get("ANTHROPIC_API_KEY"),
-        help="API token for Anthropic (defaults to ANTHROPIC_API_KEY environment variable)",
-    )
-    parser.add_argument(
-        "-k",
-        "--max-tokens",
-        type=int,
-        default=4000,
-        help="Maximum number of tokens to generate",
-    )
-    parser.add_argument(
-        "-o", "--output", help="Output file path (if not specified, output to stdout)"
-    )
-
-    args = parser.parse_args()
-
-    # Validate token
-    if not args.token:
-        print(
-            "Error: No API token provided. Set ANTHROPIC_API_KEY environment variable or use --token"
+        response = self.client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": get_xml_role()},
+                {"role": "user", "content": context},
+            ],
+            max_tokens=max_tokens,
+            temperature=temperature,
         )
-        exit(1)
+
+        if hasattr(response, "choices") and len(response.choices) > 0:
+            content = response.choices[0].message.content or "No content in response"
+            finish_reason = response.choices[0].finish_reason
+
+            if finish_reason == "length":
+                raise ValueError(
+                    f"Output was truncated due to max_tokens limit ({max_tokens}). Please increase max_tokens."
+                )
+
+            return content
+
+        return "No response generated"
+
+
+# Legacy function wrapper for backwards compatibility
+def openai_query(message, model, api_key, max_tokens, temperature=0.7, base_url=None):
+    """Legacy wrapper for VTK XML generation."""
+    generator = VTKXMLGenerator(api_key, base_url)
+    return generator.generate_xml(message, model, max_tokens, temperature)
+
+
+@click.command()
+@click.argument("input_string")
+@click.option(
+    "--provider",
+    type=click.Choice(["openai", "anthropic", "gemini", "nim"]),
+    default="openai",
+    help="LLM provider to use",
+)
+@click.option("-m", "--model", default="gpt-4o", help="Model to use for generation")
+@click.option(
+    "-t", "--token", required=True, help="API token for the selected provider"
+)
+@click.option("--base-url", help="Base URL for API (auto-detected or custom)")
+@click.option(
+    "-k",
+    "--max-tokens",
+    type=int,
+    default=4000,
+    help="Maximum number of tokens to generate",
+)
+@click.option(
+    "--temperature",
+    type=float,
+    default=0.7,
+    help="Temperature for generation (0.0-2.0)",
+)
+@click.option(
+    "-o", "--output", help="Output file path (if not specified, output to stdout)"
+)
+def main(
+    input_string, provider, model, token, base_url, max_tokens, temperature, output
+):
+    """Generate VTK XML file content using LLMs.
+
+    INPUT_STRING: Description of the VTK file to generate
+    """
+
+    # Set default base URLs
+    if not base_url:
+        base_urls = {
+            "anthropic": "https://api.anthropic.com/v1",
+            "gemini": "https://generativelanguage.googleapis.com/v1beta/openai/",
+            "nim": "https://integrate.api.nvidia.com/v1",
+        }
+        base_url = base_urls.get(provider)
+
+    # Set default models based on provider
+    if model == "gpt-4o":
+        default_models = {
+            "anthropic": "claude-3-5-sonnet-20241022",
+            "gemini": "gemini-1.5-pro",
+            "nim": "meta/llama3-70b-instruct",
+        }
+        model = default_models.get(provider, model)
+
+    # Initialize the VTK XML generator
+    try:
+        generator = VTKXMLGenerator(token, base_url)
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
     # Generate the VTK XML content
-    xml_content = anthropic_query(
-        args.input_string, args.model, args.token, args.max_tokens
-    )
+    try:
+        xml_content = generator.generate_xml(
+            input_string, model, max_tokens, temperature
+        )
+    except ValueError as e:
+        if "max_tokens" in str(e):
+            print(f"\nError: {e}", file=sys.stderr)
+            print(f"Current max_tokens: {max_tokens}", file=sys.stderr)
+            print("Try increasing with: --max-tokens <higher_number>", file=sys.stderr)
+        else:
+            print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
-    # Output to file or stdout
-    if args.output:
-        with open(args.output, "w") as f:
-            f.write(xml_content)
-        print(f"VTK XML content written to {args.output}")
+    # Validate XML structure (basic check)
+    if xml_content.strip().startswith("<?xml") and "</VTKFile>" in xml_content:
+        # Output to file or stdout
+        if output:
+            with open(output, "w") as f:
+                f.write(xml_content)
+            print(f"VTK XML content written to {output}")
+        else:
+            print(xml_content)
     else:
-        print(xml_content)
+        print("Warning: Generated content may not be valid VTK XML", file=sys.stderr)
+        if output:
+            with open(output, "w") as f:
+                f.write(xml_content)
+            print(f"Content written to {output} (please verify)")
+        else:
+            print(xml_content)
 
 
 if __name__ == "__main__":
-    parse_args()
+    main()

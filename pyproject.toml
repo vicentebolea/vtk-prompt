@@ -13,6 +13,7 @@ dependencies = [
     "trame>=3.9.0",
     "trame-vuetify",
     "trame-vtk>=2.8.0",
+    "click>=8.0.0",
 ]
 requires-python = ">=3.10"
 readme = "README.md"
@@ -32,11 +33,12 @@ rag = [
 ]
 
 [project.scripts]
-vtk-prompt = "vtk_prompt.prompt:parse_args"
-gen-vtk-file = "vtk_prompt.generate_files:parse_args"
+vtk-prompt = "vtk_prompt.prompt:main"
+gen-vtk-file = "vtk_prompt.generate_files:main"
 vtk-build-rag = "vtk_prompt.build_rag_db:main"
 vtk-test-rag = "vtk_prompt.test_rag:main"
 vtk-prompt-ui = "vtk_prompt.vtk_prompt_ui:main"
+rag-chat = "vtk_prompt.rag_chat_wrapper:main"
 
 [tool.black]
 include = 'src/.*.py$'

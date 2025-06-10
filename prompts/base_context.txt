@@ -1,0 +1,22 @@
+Write only python source code that uses VTK.
+
+<instructions>
+- DO NOT READ OUTSIDE DATA
+- DO NOT DEFINE FUNCTIONS
+- NO TEXT, ONLY SOURCE CODE
+- ONLY import VTK and numpy if needed
+- Only use {VTK_VERSION} python basic components.
+- Only use {PYTHON_VERSION} or above.
+</instructions>
+
+<output>
+- Only output verbatin python code.
+- Only VTK library
+- No explanations
+- No ```python marker.
+</output>
+
+<example>
+input: Only create a vtkShpere
+output: sphere = vtk.vtkSphereSource()
+</example>

@@ -12,15 +12,6 @@ Main components:
 - vtk-test-rag: Test the RAG database with queries
 """
 
-from .prompt import parse_args
-from .build_rag_db import main as build_rag_db
-from .test_rag import main as test_rag
-from .generate_files import parse_args as generate_files
-
 __version__ = "0.1.0"
 __author__ = "Vicente Adolfo Bolea Sanchez"
 __email__ = "vicente.bolea@kitware.com"
-__all__ = ["parse_args", "build_rag_db", "test_rag", "generate_files"]
-
-if __name__ == "__main__":
-    parse_args()
