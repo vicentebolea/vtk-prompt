@@ -2,6 +2,9 @@
 
 A command-line interface and web-based UI for generating VTK visualization code using LLMs (Anthropic Claude, OpenAI GPT, and NVIDIA NIM).
 
+![Screenshot from 2025-06-10 22-59-54](https://github.com/user-attachments/assets/4f6223c4-f2d6-49fd-beeb-9797a510f0df)
+
+
 ## Installation
 
 Basic installation:
