@@ -29,6 +29,7 @@ vtk-prompt-ui
 The web UI provides:
 - **Model Selection**: Choose between Claude models (Haiku, Sonnet 4)
 - **Token Control**: Adjust maximum tokens for responses
+- **Token Usage Tracking**: Real-time display of input and output tokens in the toolbar
 - **RAG Integration**: Toggle retrieval-augmented generation
 - **Live VTK Viewer**: See visualizations rendered in real-time
 - **Code Display**: View and copy generated VTK code
@@ -36,6 +37,13 @@ The web UI provides:
 Requirements:
 - Set `ANTHROPIC_API_KEY` environment variable
 - Access the UI at `http://localhost:8080` (default)
+
+#### Token Usage Monitoring
+
+The web UI displays real-time token usage in the toolbar after each code generation:
+- **Input Tokens**: Number of tokens consumed from your prompt and context
+- **Output Tokens**: Number of tokens generated in the response
+- Token counts help monitor API usage and costs across different providers
 
 ### Command Line Interface
 
