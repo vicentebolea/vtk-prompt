@@ -62,7 +62,7 @@ class VTKPromptClient:
         model="gpt-4o",
         base_url=None,
         max_tokens=1000,
-        temperature=0.7,
+        temperature=0.1,
         top_k=5,
         rag=False,
         retry_attempts=1,
@@ -169,7 +169,7 @@ class VTKPromptClient:
 
                 is_valid, error_msg = self.validate_code_syntax(generated_code)
                 if is_valid:
-                    return generated_code
+                    return generated_code, response.usage
 
                 elif attempt < retry_attempts - 1:  # Don't print on last attempt
                     if self.verbose:
@@ -186,10 +186,13 @@ class VTKPromptClient:
                     # Last attempt failed
                     if self.verbose:
                         print(f"Final attempt failed AST validation: {error_msg}")
-                    return generated_code  # Return anyway, let caller handle
+                    return (
+                        generated_code,
+                        response.usage,
+                    )  # Return anyway, let caller handle
             else:
                 if attempt == retry_attempts - 1:
-                    return "No response generated"
+                    return "No response generated", response.usage
 
         return "No response generated"
 
@@ -277,7 +280,7 @@ def main(
             database_path=database,
             verbose=verbose,
         )
-        generated_code = client.query(
+        generated_code, usage = client.query(
             input_string,
             api_key=token,
             model=model,
@@ -288,6 +291,12 @@ def main(
             rag=rag,
             retry_attempts=retry_attempts,
         )
+
+        if verbose and usage is not None:
+            print(
+                f"Used tokens: input={usage.prompt_tokens} output={usage.completion_tokens}"
+            )
+
         client.run_code(generated_code)
 
     except ValueError as e:

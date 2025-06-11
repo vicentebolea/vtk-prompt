@@ -86,6 +86,10 @@ class VTKPromptApp:
         self.state.use_rag = False
         self.state.error_message = ""
 
+        # Token usage tracking
+        self.state.input_tokens = 0
+        self.state.output_tokens = 0
+
         # API configuration state
         self.state.use_cloud_models = True  # Toggle between cloud and local
         self.state.tab_index = 0  # Tab navigation state
@@ -115,15 +119,7 @@ class VTKPromptApp:
             ],
         }
 
-        # Local model configuration
-        self.state.local_base_url = "http://localhost:11434"
-        self.state.local_model = "llama3.2:latest"
-
-        # Common configuration
-        self.state.api_token = ""
-        self.state.max_tokens = 1000
-        self.state.temperature = 0.7
-        self.state.retry_attempts = 1
+        self.state.api_token = "ollama"
 
         # Build UI
         self._build_ui()
@@ -287,17 +283,29 @@ class VTKPromptApp:
             if hasattr(self.state, "error_message") and self.state.error_message:
                 return
 
-            generated_code = self.prompt_client.query(
+            result = self.prompt_client.query(
                 enhanced_query,
                 api_key=self._get_api_key(),
                 model=self._get_model(),
                 base_url=self._get_base_url(),
                 max_tokens=int(self.state.max_tokens),
                 temperature=float(self.state.temperature),
-                top_k=5,
+                top_k=int(self.state.top_k),
                 rag=self.state.use_rag,
                 retry_attempts=int(self.state.retry_attempts),
             )
+
+            # Handle both code and usage information
+            if isinstance(result, tuple) and len(result) == 2:
+                generated_code, usage = result
+                if usage:
+                    self.state.input_tokens = usage.prompt_tokens
+                    self.state.output_tokens = usage.completion_tokens
+            else:
+                generated_code = result
+                # Reset token counts if no usage info
+                self.state.input_tokens = 0
+                self.state.output_tokens = 0
 
             self.state.generated_code = EXPLAIN_RENDERER + "\n" + generated_code
 
@@ -358,32 +366,37 @@ class VTKPromptApp:
     def _build_ui(self):
         """Build a simplified Vuetify UI."""
         # Initialize drawer state as collapsed
-        self.state.main_drawer = False
+        self.state.main_drawer = True
 
         with SinglePageWithDrawerLayout(self.server) as layout:
             layout.title.set_text("VTK Prompt UI")
             with layout.toolbar:
                 vuetify.VSpacer()
+                # Token usage display
+                with vuetify.VChip(
+                    small=True,
+                    color="primary",
+                    text_color="white",
+                    v_show="input_tokens > 0 || output_tokens > 0",
+                    style="margin-right: 8px;",
+                ):
+                    html.Span(
+                        "Tokens: In: {{ input_tokens }} | Out: {{ output_tokens }}"
+                    )
 
                 # VTK control buttons
                 with vuetify.VBtn(
                     click=self.clear_scene,
-                    outlined=True,
-                    small=True,
                     icon=True,
-                    style="margin-right: 8px;",
                     v_tooltip_bottom="Clear Scene",
                 ):
                     vuetify.VIcon("mdi-reload")
                 with vuetify.VBtn(
                     click=self.reset_camera,
-                    outlined=True,
-                    small=True,
                     icon=True,
-                    style="margin-right: 16px;",
                     v_tooltip_bottom="Reset Camera",
                 ):
-                    vuetify.VIcon("mdi-camera-retake")
+                    vuetify.VIcon("mdi-camera-retake-outline")
 
                 vuetify.VSwitch(
                     v_model=("$vuetify.theme.dark"),
@@ -394,14 +407,6 @@ class VTKPromptApp:
 
             with layout.drawer as drawer:
                 drawer.width = 350
-
-                with vuetify.VListItem():
-                    with vuetify.VListItemContent():
-                        vuetify.VListItemTitle(
-                            "Advanced Settings",
-                            style="font-size: 18px; font-weight: bold;",
-                        )
-                vuetify.VDivider()
 
                 with vuetify.VContainer():
                     # Tab Navigation - Centered
@@ -465,9 +470,9 @@ class VTKPromptApp:
                                         label="Base URL",
                                         v_model=(
                                             "local_base_url",
-                                            "http://localhost:11434",
+                                            "http://localhost:11434/v1",
                                         ),
-                                        placeholder="http://localhost:11434",
+                                        placeholder="http://localhost:11434/v1",
                                         dense=True,
                                         outlined=True,
                                         prepend_icon="mdi-server",
@@ -477,8 +482,8 @@ class VTKPromptApp:
 
                                     vuetify.VTextField(
                                         label="Model Name",
-                                        v_model=("local_model", "llama3.2:latest"),
-                                        placeholder="llama3.2:latest",
+                                        v_model=("local_model", "devstral"),
+                                        placeholder="devstral",
                                         dense=True,
                                         outlined=True,
                                         prepend_icon="mdi-brain",
@@ -489,8 +494,8 @@ class VTKPromptApp:
                                     # Optional API Token for local
                                     vuetify.VTextField(
                                         label="API Token (Optional)",
-                                        v_model=("api_token", ""),
-                                        placeholder="Enter token if required",
+                                        v_model=("api_token", "ollama"),
+                                        placeholder="ollama",
                                         type="password",
                                         dense=True,
                                         outlined=True,
@@ -499,18 +504,40 @@ class VTKPromptApp:
                                         persistent_hint=True,
                                     )
 
-                    # Common Settings (outside tabs)
-                    with vuetify.VCard(style="margin-top: 20px;"):
+                    with vuetify.VCard(style="margin-top: 10px;"):
+                        with vuetify.VCardTitle(style="padding-bottom: 0;"):
+                            "⚙️  RAG settings"
+                        with vuetify.VCardText():
+                            vuetify.VCheckbox(
+                                v_model=("use_rag", False),
+                                label="RAG",
+                                prepend_icon="mdi-bookshelf",
+                            )
+                            vuetify.VTextField(
+                                label="Top K",
+                                v_model=("top_k", 5),
+                                type="number",
+                                min=1,
+                                max=15,
+                                dense=True,
+                                disabled=("!use_rag",),
+                                outlined=True,
+                                prepend_icon="mdi-chart-scatter-plot",
+                            )
+
+                    with vuetify.VCard(style="margin-top: 10px;"):
                         with vuetify.VCardTitle(style="padding-bottom: 0;"):
                             "⚙️ Generation Settings"
                         with vuetify.VCardText():
                             vuetify.VSlider(
-                                v_model=("temperature", 0.7),
+                                label="Temperature",
+                                v_model=("temperature", 0.1),
                                 min=0.0,
                                 max=1.0,
                                 step=0.1,
                                 thumb_label="always",
                                 color="orange",
+                                prepend_icon="mdi-thermometer",
                             )
                             vuetify.VTextField(
                                 label="Max Tokens",
@@ -530,20 +557,13 @@ class VTKPromptApp:
                                 outlined=True,
                                 prepend_icon="mdi-repeat",
                             )
-                            vuetify.VCheckbox(
-                                v_model=("use_rag", False),
-                                label="📚 Enable RAG",
-                                color="purple",
-                                hint="Use VTK examples for better code",
-                                persistent_hint=True,
-                            )
 
             with layout.content:
                 with vuetify.VContainer(fluid=True, style="height: 100%;"):
                     with vuetify.VRow(style="height: 100%;"):
                         # Left column - Generated code view
                         with vuetify.VCol(cols=6, style="height: 100%;"):
-                            with vuetify.VCard(style="height: 100%;"):
+                            with vuetify.VCard(style="height: 80%;"):
                                 with vuetify.VCardTitle():
                                     "Generated Code"
                                 with vuetify.VCardText(
@@ -558,6 +578,16 @@ class VTKPromptApp:
                                         auto_grow=True,
                                         style="font-family: monospace; min-height: 200px; max-height: 80vh; overflow-y: auto;",
                                         placeholder="Generated VTK code will appear here...",
+                                    )
+
+                            with vuetify.VCard(style="height: 20%;"):
+                                with vuetify.VCardText():
+                                    # Error message
+                                    vuetify.VAlert(
+                                        "{{ error_message }}",
+                                        type="error",
+                                        v_show=("error_message", ""),
+                                        dense=True,
                                     )
 
                         # Right column - VTK viewer and prompt
@@ -599,35 +629,27 @@ class VTKPromptApp:
                                 # Bottom: Prompt input
                                 with vuetify.VCol(cols=12, style="height: 40%;"):
                                     with vuetify.VCard(style="height: 100%;"):
-                                        with vuetify.VCardTitle():
-                                            "VTK Code Generator"
-                                        with vuetify.VCardText(
-                                            style="height: calc(100% - 48px);"
-                                        ):
-                                            # Current model indicator
-                                            with vuetify.VRow(
-                                                no_gutters=True,
+                                        with vuetify.VCardText():
+                                            # Cloud models chip
+                                            vuetify.VChip(
+                                                "☁️ {{ provider }}/{{ model }}",
+                                                small=True,
+                                                color="blue",
+                                                text_color="white",
+                                                label=True,
                                                 style="margin-bottom: 8px;",
-                                            ):
-                                                with vuetify.VCol():
-                                                    # Cloud models chip
-                                                    vuetify.VChip(
-                                                        "☁️ {{ provider }}/{{ model }}",
-                                                        small=True,
-                                                        color="blue",
-                                                        text_color="white",
-                                                        label=True,
-                                                        v_show="use_cloud_models",
-                                                    )
-                                                    # Local models chip
-                                                    vuetify.VChip(
-                                                        "🏠 {{ local_base_url.replace('http://', '').replace('https://', '') }}/{{ local_model }}",
-                                                        small=True,
-                                                        color="green",
-                                                        text_color="white",
-                                                        label=True,
-                                                        v_show="!use_cloud_models",
-                                                    )
+                                                v_show="use_cloud_models",
+                                            )
+                                            # Local models chip
+                                            vuetify.VChip(
+                                                "🏠 {{ local_base_url.replace('http://', '').replace('https://', '') }}/{{ local_model }}",
+                                                small=True,
+                                                color="green",
+                                                text_color="white",
+                                                label=True,
+                                                style="margin-bottom: 8px;",
+                                                v_show="!use_cloud_models",
+                                            )
 
                                             # Query input
                                             vuetify.VTextarea(
@@ -636,7 +658,6 @@ class VTKPromptApp:
                                                 rows=4,
                                                 outlined=True,
                                                 placeholder="e.g., Create a red sphere with lighting",
-                                                style="margin-bottom: 8px;",
                                             )
 
                                             # Generate button
@@ -647,14 +668,6 @@ class VTKPromptApp:
                                                 loading=("is_loading", False),
                                                 click=self.generate_code,
                                                 style="margin-bottom: 8px;",
-                                            )
-
-                                            # Error message
-                                            vuetify.VAlert(
-                                                "{{ error_message }}",
-                                                type="error",
-                                                v_show=("error_message", ""),
-                                                dense=True,
                                             )
 
     def start(self):
