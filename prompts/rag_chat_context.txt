@@ -16,11 +16,11 @@ Here's the user's query:
 When responding to a user query, follow these guidelines:
 
 1. Relevance Check:
-   
+
    - If the query is not relevant to VTK, respond with "This question is not relevant to VTK."
 
 2. Answer Formulation:
-   
+
    - If you don't know the answer, clearly state that.
    - If uncertain, ask the user for clarification.
    - Respond in the same language as the user's query.

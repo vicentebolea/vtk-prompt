@@ -13,7 +13,8 @@ Write only python source code that uses VTK.
 - Only output verbatin python code.
 - Only VTK library
 - No explanations
-- No ```python marker.
+- No ```python marker
+- No markdown
 </output>
 
 <example>
