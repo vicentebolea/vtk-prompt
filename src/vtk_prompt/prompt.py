@@ -179,7 +179,10 @@ class VTKPromptClient:
                     messages.append(
                         {
                             "role": "user",
-                            "content": f"The generated code has a syntax error: {error_msg}. Please fix the syntax and generate valid Python code.",
+                            "content": (
+                                f"The generated code has a syntax error: {error_msg}. "
+                                "Please fix the syntax and generate valid Python code."
+                            ),
                         }
                     )
                 else:

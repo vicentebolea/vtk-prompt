@@ -1,4 +1,4 @@
-"""VTK-Prompt - A CLI tool for generating VTK visualizations using Large Language Models.
+"""VTK-Prompt - CLI tool for generating VTK visualizations using LLMs.
 
 This package provides tools to generate VTK Python code and XML files using
 LLMs (Anthropic Claude, OpenAI GPT, or NVIDIA NIM models). It also includes

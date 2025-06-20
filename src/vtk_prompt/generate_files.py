@@ -4,7 +4,6 @@ from pathlib import Path
 import os
 import json
 import sys
-import ast
 import openai
 import click
 
@@ -40,9 +39,9 @@ class VTKXMLGenerator:
         """Generate VTK XML content from a description."""
         examples_path = Path("data/examples/index.json")
         if examples_path.exists():
-            vtk_classes = " ".join(json.loads(examples_path.read_text()).keys())
+            _ = " ".join(json.loads(examples_path.read_text()).keys())
         else:
-            vtk_classes = ""
+            _ = ""
 
         context = get_vtk_xml_context(message)
 
@@ -62,7 +61,8 @@ class VTKXMLGenerator:
 
             if finish_reason == "length":
                 raise ValueError(
-                    f"Output was truncated due to max_tokens limit ({max_tokens}). Please increase max_tokens."
+                    f"Output was truncated due to max_tokens limit ({max_tokens}). "
+                    "Please increase max_tokens."
                 )
 
             return content
