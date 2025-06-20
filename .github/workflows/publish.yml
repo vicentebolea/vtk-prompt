@@ -83,6 +83,12 @@ jobs:
         skip-existing: true
         verbose: true
 
+    - name: Print TestPyPI installation instructions
+      run: |
+        echo "📦 Package published to TestPyPI!"
+        echo "To install from TestPyPI (with dependencies from PyPI):"
+        echo "pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ vtk-prompt"
+
   publish-pypi:
     name: Publish to PyPI
     runs-on: ubuntu-latest
