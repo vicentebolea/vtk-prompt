@@ -12,6 +12,14 @@ Main components:
 - vtk-test-rag: Test the RAG database with queries
 """
 
-__version__ = "0.1.0"
+try:
+    from importlib.metadata import version, PackageNotFoundError
+except ImportError:
+    from importlib_metadata import version, PackageNotFoundError
+
+try:
+    __version__ = version("vtk-prompt")
+except PackageNotFoundError:
+    __version__ = "unknown"
 __author__ = "Vicente Adolfo Bolea Sanchez"
 __email__ = "vicente.bolea@kitware.com"
