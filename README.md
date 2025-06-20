@@ -1,153 +1,271 @@
 # VTK Prompt
 
-A command-line interface and web-based UI for generating VTK visualization code using LLMs (Anthropic Claude, OpenAI GPT, and NVIDIA NIM).
+[![CI](https://github.com/vicentebolea/vtk-prompt/actions/workflows/ci.yml/badge.svg)](https://github.com/vicentebolea/vtk-prompt/actions/workflows/ci.yml)
+[![Build and Publish](https://github.com/vicentebolea/vtk-prompt/actions/workflows/publish.yml/badge.svg)](https://github.com/vicentebolea/vtk-prompt/actions/workflows/publish.yml)
+[![PyPI version](https://badge.fury.io/py/vtk-prompt.svg)](https://badge.fury.io/py/vtk-prompt)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+
+A command-line interface and web-based UI for generating VTK visualization code using Large Language Models (Anthropic Claude, OpenAI GPT, NVIDIA NIM, and local models).
 
 ![Screenshot from 2025-06-11 19-02-00](https://github.com/user-attachments/assets/2e1e85c3-4efd-43e4-810c-185b851d609d)
 
+## Features
+
+- Multiple LLM providers: Anthropic Claude, OpenAI GPT, NVIDIA NIM, and local models
+- Interactive web UI with live VTK rendering
+- Retrieval-Augmented Generation (RAG) with VTK examples database
+- Real-time visualization of generated code
+- Token usage tracking and cost monitoring
+- CLI and Python API for integration
+
 ## Installation
 
-Basic installation:
+### From PyPI (Stable)
+
 ```bash
+pip install vtk-prompt
+```
+
+### From TestPyPI (Latest Development)
+
+```bash
+pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ vtk-prompt
+```
+
+### From Source
+
+```bash
+git clone https://github.com/vicentebolea/vtk-prompt.git
+cd vtk-prompt
 pip install -e .
 ```
 
-With RAG support:
+## Quick Start
+
+### 1. Set up API keys
+
 ```bash
-pip install -e ".[rag]"
+export ANTHROPIC_API_KEY="your-anthropic-key"
+export OPENAI_API_KEY="your-openai-key"  # Optional
 ```
 
-## Usage
-
-### Web UI (Recommended)
-
-Launch the interactive web interface:
+### 2. Launch Web UI (Recommended)
 
 ```bash
 vtk-prompt-ui
 ```
 
-The web UI provides:
-- **Model Selection**: Choose between Claude models (Haiku, Sonnet 4)
-- **Token Control**: Adjust maximum tokens for responses
-- **Token Usage Tracking**: Real-time display of input and output tokens in the toolbar
-- **RAG Integration**: Toggle retrieval-augmented generation
-- **Live VTK Viewer**: See visualizations rendered in real-time
-- **Code Display**: View and copy generated VTK code
+Access the UI at `http://localhost:8080`
 
-Requirements:
-- Set `ANTHROPIC_API_KEY` environment variable
-- Access the UI at `http://localhost:8080` (default)
+### 3. Or use CLI
 
-#### Token Usage Monitoring
+```bash
+# Generate VTK code
+vtk-prompt "Create a red sphere"
 
-The web UI displays real-time token usage in the toolbar after each code generation:
-- **Input Tokens**: Number of tokens consumed from your prompt and context
-- **Output Tokens**: Number of tokens generated in the response
-- Token counts help monitor API usage and costs across different providers
+# With RAG enhancement
+vtk-prompt "Create a sphere with custom resolution" --rag
+
+# Different providers
+vtk-prompt "Create a blue cube" --provider openai
+vtk-prompt "Create a cone" --provider nim --token YOUR_NIM_TOKEN
+```
+
+## Usage
+
+### Web UI Features
+
+The web interface provides:
+
+- Model selection: Choose between Claude models (Haiku, Sonnet 4) and other providers
+- Token control: Adjust maximum tokens for responses  
+- Usage tracking: Real-time display of input/output tokens and costs
+- RAG integration: Toggle retrieval-augmented generation for better results
+- Live preview: See VTK visualizations rendered in real-time
+- Code export: View, edit, and copy generated VTK code
+- Local & cloud support: Both cloud APIs and local model endpoints
 
 ### Command Line Interface
 
 ```bash
-# Basic usage with Anthropic Claude (default)
+# Basic usage
 vtk-prompt "Create a red sphere"
 
-# Using OpenAI GPT models
-vtk-prompt "Create a blue cube" --provider openai -t YOUR_OPENAI_TOKEN
+# Advanced options
+vtk-prompt "Create a textured cone with 32 resolution" \
+  --provider anthropic \
+  --model claude-3-5-sonnet-20241022 \
+  --max-tokens 4000 \
+  --rag \
+  --verbose
 
-# Using NVIDIA NIM with Llama 3
-vtk-prompt "Create a cone with 16 resolution" --provider nim -t YOUR_NIM_TOKEN
-
-# Enable RAG (Retrieval Augmented Generation) for better VTK class references
-vtk-prompt "Create a cylinder" -r
-
-# Show verbose output including generated code
-vtk-prompt "Create a sphere with a custom shader" -v
+# Using different providers
+vtk-prompt "Create a blue cube" --provider openai --model gpt-4o
+vtk-prompt "Create a cylinder" --provider nim --model meta/llama3-70b-instruct
 ```
 
-## RAG (Retrieval Augmented Generation)
+### RAG (Retrieval Augmented Generation)
 
-The RAG feature improves code generation by retrieving relevant VTK code examples from a database. To use RAG:
+Enhance code generation with relevant VTK examples:
 
-1. Build the RAG database:
+1. **Build RAG database** (one-time setup):
 ```bash
-# Build RAG database using default settings
 vtk-build-rag
-
-# Customize the database build
-vtk-build-rag --examples-dir data/examples --database ./db/my-database --collection-name vtk-examples
 ```
 
-2. Test the RAG database (optional):
+2. **Test RAG system** (optional):
 ```bash
-# Test the RAG system with a simple query
 vtk-test-rag "How to create a cube in VTK"
-
-# Test with custom database settings
-vtk-test-rag "vtkSphereSource with custom resolution" --database ./db/my-database --collection my-collection
 ```
 
-3. Use the RAG database in your queries:
+3. **Use RAG in queries**:
 ```bash
-# Basic RAG usage (uses default database)
-vtk-prompt "Create a cone with texture" -r
-
-# Specify a custom database or collection
-vtk-prompt "Create a vtkCubeSource" -r --database ./db/my-database --collection my-collection
+vtk-prompt "Create a vtkSphereSource with texture mapping" --rag
 ```
 
-## Environment Variables
+### Python API
 
-You can set the following environment variables to avoid providing tokens on the command line:
-- `ANTHROPIC_API_KEY` - For Anthropic Claude models
-- `OPENAI_API_KEY` - For OpenAI API or NVIDIA NIM models
+```python
+from vtk_prompt import VTKPromptClient
 
-## Supported Providers and Models
+client = VTKPromptClient()
+code = client.generate_code("Create a red sphere")
+print(code)
+```
 
-### Anthropic
-- Default model: claude-3-5-haiku-20240307
-- Other models: claude-3-opus, claude-3-sonnet, etc.
+## Configuration
 
-### OpenAI 
-- Default model: gpt-4o
-- Other models: gpt-4, gpt-3.5-turbo, etc.
+### Environment Variables
 
-### NVIDIA NIM
-- Default model: meta/llama3-70b-instruct
-- Other models: mistralai/mixtral-8x7b-instruct, etc.
-- Base URL: https://api.nvcf.nvidia.com/v1 (default for NIM provider)
+- `ANTHROPIC_API_KEY` - Anthropic Claude API key
+- `OPENAI_API_KEY` - OpenAI API key (also used for NVIDIA NIM)
 
-## Advanced Options
+### Supported Providers & Models
+
+| Provider | Default Model | Base URL |
+|----------|---------------|----------|
+| **anthropic** | claude-3-5-haiku-20241022 | https://api.anthropic.com/v1 |
+| **openai** | gpt-4o | https://api.openai.com/v1 |
+| **nim** | meta/llama3-70b-instruct | https://integrate.api.nvidia.com/v1 |
+| **custom** | User-defined | User-defined (for local models) |
+
+### Custom/Local Models
+
+You can use local models via OpenAI-compatible APIs:
+
+```bash
+# Using Ollama
+vtk-prompt "Create a sphere" \
+  --provider custom \
+  --base-url http://localhost:11434/v1 \
+  --model llama2
+
+# Using LM Studio  
+vtk-prompt "Create a cube" \
+  --provider custom \
+  --base-url http://localhost:1234/v1 \
+  --model local-model
+```
+
+## Development
+
+### Setting up development environment
+
+```bash
+git clone https://github.com/vicentebolea/vtk-prompt.git
+cd vtk-prompt
+pip install -e ".[all]"
+```
+
+### Running tests
+
+```bash
+# Lint and format
+black src/
+flake8 src/
+
+# Test installation
+vtk-prompt --help
+vtk-prompt-ui --help
+```
+
+### Building package
+
+```bash
+python -m build
+```
+
+## CLI Reference
 
 ```
-usage: vtk-prompt [-h] [--provider {anthropic,openai,nim}] [-m MODEL] [-k MAX_TOKENS]
-                  [-t TOKEN] [--base-url BASE_URL] [-r] [-v]
-                  [--collection COLLECTION] [--database DATABASE] [--top-k TOP_K]
-                  input_string
+usage: vtk-prompt [-h] [--provider {anthropic,openai,nim,custom}] 
+                  [-m MODEL] [-k MAX_TOKENS] [-t TOKEN] [--base-url BASE_URL] 
+                  [-r] [-v] [--collection COLLECTION] [--database DATABASE] 
+                  [--top-k TOP_K] input_string
 
-VTK LLM prompt
+Generate VTK visualization code using Large Language Models
 
 positional arguments:
-  input_string
+  input_string          Description of the VTK visualization to generate
 
 options:
-  -h, --help            show this help message and exit
+  -h, --help            Show this help message and exit
   -m MODEL, --model MODEL
                         Model name to use
   -k MAX_TOKENS, --max-tokens MAX_TOKENS
-                        Max # of tokens
+                        Maximum number of tokens to generate
   -t TOKEN, --token TOKEN
-                        API token (defaults to environment variable based on provider)
-  --base-url BASE_URL   Base URL for API (useful for NIM or proxies)
-  -r, --rag             Use experimental RAG
-  -v, --verbose         Show source code
-
-LLM Provider:
-  --provider {anthropic,openai,nim}
-                        LLM provider to use (anthropic, openai, or nim)
+                        API token (defaults to environment variable)
+  --base-url BASE_URL   Base URL for API (for custom/local models)
+  -r, --rag             Use Retrieval Augmented Generation
+  -v, --verbose         Show generated source code
+  --provider {anthropic,openai,nim,custom}
+                        LLM provider to use
 
 RAG Options:
   --collection COLLECTION
                         Collection name for RAG (default: vtk-examples)
   --database DATABASE   Database path for RAG (default: ./db/codesage-codesage-large-v2)
-  --top-k TOP_K         Number of examples to retrieve from RAG (default: 5)
+  --top-k TOP_K         Number of examples to retrieve (default: 5)
 ```
+
+## Available Commands
+
+- `vtk-prompt` - Main CLI for code generation
+- `vtk-prompt-ui` - Launch web interface
+- `vtk-build-rag` - Build RAG database from VTK examples
+- `vtk-test-rag` - Test RAG functionality
+- `gen-vtk-file` - Generate VTK XML files
+- `rag-chat` - Interactive RAG chat interface
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Architecture
+
+- **Core**: Python package with CLI and API
+- **UI**: Trame-based web interface with VTK rendering
+- **RAG**: ChromaDB + Llama Index for code example retrieval
+- **Providers**: Unified interface for multiple LLM APIs
+
+## Links
+
+- [PyPI Package](https://pypi.org/project/vtk-prompt/)
+- [Documentation](https://github.com/vicentebolea/vtk-prompt)
+- [Issues](https://github.com/vicentebolea/vtk-prompt/issues)
+- [VTK Documentation](https://vtk.org/documentation/)
+
+---
+
+Made with care for the VTK and scientific visualization community.
