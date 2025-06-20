@@ -69,7 +69,8 @@ jobs:
     - name: Build package with unique version
       run: |
         # Create a unique dev version for TestPyPI
-        export SETUPTOOLS_SCM_PRETEND_VERSION="0.1.dev$(date +%Y%m%d%H%M%S)"
+        SETUPTOOLS_SCM_PRETEND_VERSION="0.1.dev$(date +%Y%m%d%H%M%S)"
+        export SETUPTOOLS_SCM_PRETEND_VERSION
         python -m build
 
     - name: Check package
