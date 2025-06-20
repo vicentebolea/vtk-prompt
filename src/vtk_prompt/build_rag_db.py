@@ -128,9 +128,10 @@ def main():
         )
 
         print(f"Successfully built RAG database at '{args.database}'")
-        print(f"You can now use the RAG database with vtk-prompt by running:")
+        print("You can now use the RAG database with vtk-prompt by running:")
         print(
-            f'vtk-prompt "your query" -r --database {args.database} --collection {args.collection_name}'
+            f'vtk-prompt "your query" -r --database {args.database} '
+            f"--collection {args.collection_name}"
         )
 
     except Exception as e:

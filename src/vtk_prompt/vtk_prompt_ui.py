@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-import os
 import sys
-import asyncio
 from pathlib import Path
 
 # Add VTK and Trame imports
@@ -16,12 +14,6 @@ import vtk
 
 # Import our prompt functionality
 from .prompt import VTKPromptClient
-from .rag_chat_wrapper import (
-    get_rag_snippets,
-    check_rag_components_available,
-)
-import sys
-from pathlib import Path
 
 # Import our template system
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
@@ -136,12 +128,15 @@ class VTKPromptApp:
                 self.state.error_message = validation_error
                 return
 
-            base_url = self._get_base_url()
+            _ = self._get_base_url()
             api_key = self._get_api_key()
 
             # For cloud models, API key is usually required
             if self.state.use_cloud_models and not api_key:
-                self.state.error_message = f"API token is required for {self.state.provider}. Please enter your API token."
+                self.state.error_message = (
+                    f"API token is required for {self.state.provider}. "
+                    "Please enter your API token."
+                )
                 return
 
             self.prompt_client = VTKPromptClient(
@@ -576,7 +571,10 @@ class VTKPromptApp:
                                         hide_details=True,
                                         no_resize=True,
                                         auto_grow=True,
-                                        style="font-family: monospace; min-height: 200px; max-height: 80vh; overflow-y: auto;",
+                                        style=(
+                                            "font-family: monospace; min-height: 200px; "
+                                            "max-height: 80vh; overflow-y: auto;"
+                                        ),
                                         placeholder="Generated VTK code will appear here...",
                                     )
 
@@ -642,7 +640,10 @@ class VTKPromptApp:
                                             )
                                             # Local models chip
                                             vuetify.VChip(
-                                                "🏠 {{ local_base_url.replace('http://', '').replace('https://', '') }}/{{ local_model }}",
+                                                (
+                                                    "🏠 {{ local_base_url.replace('http://', '')"
+                                                    ".replace('https://', '') }}/{{ local_model }}"
+                                                ),
                                                 small=True,
                                                 color="green",
                                                 text_color="white",

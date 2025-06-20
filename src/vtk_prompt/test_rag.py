@@ -33,7 +33,7 @@ def display_results(results, top_k):
     for i, (doc, metadata, score) in enumerate(
         zip(results["code_documents"], results["code_metadata"], results["code_scores"])
     ):
-        print(f"\n--- Result {i+1} (Score: {score:.4f}) ---")
+        print(f"\n--- Result {i + 1} (Score: {score:.4f}) ---")
         print(f"Source: {metadata['original_id']}")
         print(f"Snippet:\n{doc}")
         print("-" * 80)
@@ -43,7 +43,7 @@ def display_results(results, top_k):
     for i, (doc, metadata, score) in enumerate(
         zip(results["text_documents"], results["text_metadata"], results["text_scores"])
     ):
-        print(f"\n--- Text {i+1} (Score: {score:.4f}) ---")
+        print(f"\n--- Text {i + 1} (Score: {score:.4f}) ---")
         print(f"Source: {metadata['original_id']}")
         if "code" in metadata:
             print(f"Related code: {metadata['code']}")
