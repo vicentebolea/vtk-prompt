@@ -1,6 +1,6 @@
 [project]
 name = "vtk-prompt"
-version = "0.1.0"
+dynamic = ["version"]
 description = "A project combining VTK visualization with LLM APIs (Anthropic, OpenAI, NVIDIA NIM)"
 authors = [
     {name = "Vicente Adolfo Bolea Sanchez", email = "vicente.bolea@kitware.com"},
@@ -17,7 +17,25 @@ dependencies = [
 ]
 requires-python = ">=3.10"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
+keywords = ["vtk", "visualization", "llm", "ai", "anthropic", "openai"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Topic :: Software Development :: Code Generators",
+]
+
+[project.urls]
+Homepage = "https://github.com/vicentebolea/vtk-prompt"
+Repository = "https://github.com/vicentebolea/vtk-prompt"
+Issues = "https://github.com/vicentebolea/vtk-prompt/issues"
 
 [project.optional-dependencies]
 rag = [
@@ -39,6 +57,13 @@ vtk-build-rag = "vtk_prompt.build_rag_db:main"
 vtk-test-rag = "vtk_prompt.test_rag:main"
 vtk-prompt-ui = "vtk_prompt.vtk_prompt_ui:main"
 rag-chat = "vtk_prompt.rag_chat_wrapper:main"
+
+[build-system]
+requires = ["setuptools>=61.0", "setuptools-scm>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+fallback_version = "0.1.0"
 
 [tool.black]
 include = 'src/.*.py$'
