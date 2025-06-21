@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 
-from pathlib import Path
+import ast
 import os
 import sys
-import ast
 import openai
 import click
 from dataclasses import dataclass
 
-sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
-from prompts import (
+from .prompts import (
     get_no_rag_context,
     get_rag_context,
     get_python_role,

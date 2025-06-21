@@ -12,37 +12,33 @@ PROMPTS_DIR = Path(__file__).parent
 
 def load_template(template_name: str) -> str:
     """Load a template file from the prompts directory.
-    
+
     Args:
         template_name: Name of the template file (without .txt extension)
-        
+
     Returns:
         The template content as a string
     """
     template_path = PROMPTS_DIR / f"{template_name}.txt"
     if not template_path.exists():
-        raise FileNotFoundError(f"Template {template_name} not found at {template_path}")
-    
+        raise FileNotFoundError(
+            f"Template {template_name} not found at {template_path}"
+        )
+
     return template_path.read_text()
 
 
 def get_base_context() -> str:
     """Get the base context template with version variables filled in."""
     template = load_template("base_context")
-    return template.format(
-        VTK_VERSION=VTK_VERSION,
-        PYTHON_VERSION=PYTHON_VERSION
-    )
+    return template.format(VTK_VERSION=VTK_VERSION, PYTHON_VERSION=PYTHON_VERSION)
 
 
 def get_no_rag_context(request: str) -> str:
     """Get the no-RAG context template with request filled in."""
     base_context = get_base_context()
     template = load_template("no_rag_context")
-    return template.format(
-        BASE_CONTEXT=base_context,
-        request=request
-    )
+    return template.format(BASE_CONTEXT=base_context, request=request)
 
 
 def get_rag_context(request: str, context_snippets: str) -> str:
@@ -50,9 +46,7 @@ def get_rag_context(request: str, context_snippets: str) -> str:
     base_context = get_base_context()
     template = load_template("rag_context")
     return template.format(
-        BASE_CONTEXT=base_context,
-        request=request,
-        context_snippets=context_snippets
+        BASE_CONTEXT=base_context, request=request, context_snippets=context_snippets
     )
 
 
@@ -65,10 +59,7 @@ def get_python_role() -> str:
 def get_vtk_xml_context(description: str) -> str:
     """Get the VTK XML context template with description filled in."""
     template = load_template("vtk_xml_context")
-    return template.format(
-        VTK_VERSION=VTK_VERSION,
-        description=description
-    )
+    return template.format(VTK_VERSION=VTK_VERSION, description=description)
 
 
 def get_xml_role() -> str:
@@ -84,7 +75,4 @@ def get_ui_post_prompt() -> str:
 def get_rag_chat_context(context: str, query: str) -> str:
     """Get the RAG chat context template with context and query filled in."""
     template = load_template("rag_chat_context")
-    return template.format(
-        CONTEXT=context,
-        QUERY=query
-    )
+    return template.format(CONTEXT=context, QUERY=query)

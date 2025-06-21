@@ -14,8 +14,7 @@ from typing import List
 import importlib.util
 
 # Import our template system
-sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
-from prompts import get_rag_chat_context
+from .prompts import get_rag_chat_context
 
 # Add rag-components to path
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent / "rag-components"))

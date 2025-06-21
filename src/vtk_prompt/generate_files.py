@@ -8,8 +8,7 @@ import openai
 import click
 
 # Import our template system
-sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
-from prompts import (
+from .prompts import (
     get_vtk_xml_context,
     get_xml_role,
 )

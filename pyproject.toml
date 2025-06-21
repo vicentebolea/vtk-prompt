@@ -61,5 +61,8 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools_scm]
 fallback_version = "0.1.0"
 
+[tool.setuptools.package-data]
+vtk_prompt = ["prompts/*.txt"]
+
 [tool.black]
 include = 'src/.*.py$'

@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
-from pathlib import Path
-
 # Add VTK and Trame imports
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 from trame.app import get_server
@@ -16,8 +13,7 @@ import vtk
 from .prompt import VTKPromptClient
 
 # Import our template system
-sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
-from prompts import get_ui_post_prompt
+from .prompts import get_ui_post_prompt
 
 EXPLAIN_RENDERER = (
     "# renderer is a vtkRenderer injected by this webapp"
