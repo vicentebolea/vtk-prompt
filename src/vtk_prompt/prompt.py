@@ -3,9 +3,11 @@
 import ast
 import os
 import sys
+import json
 import openai
 import click
 from dataclasses import dataclass
+from pathlib import Path
 
 from .prompts import (
     get_no_rag_context,
@@ -21,6 +23,33 @@ class VTKPromptClient:
     collection_name: str = "vtk-examples"
     database_path: str = "./db/codesage-codesage-large-v2"
     verbose: bool = False
+    conversation_file: str = None
+
+    def load_conversation(self):
+        """Load conversation history from file."""
+        if not self.conversation_file or not Path(self.conversation_file).exists():
+            return []
+
+        try:
+            with open(self.conversation_file, "r") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error: Could not load conversation file: {e}")
+            return []
+
+    def save_conversation(self, messages):
+        """Save conversation history to file."""
+        if not self.conversation_file:
+            return
+
+        try:
+            # Ensure directory exists
+            Path(self.conversation_file).parent.mkdir(parents=True, exist_ok=True)
+
+            with open(self.conversation_file, "w") as f:
+                json.dump(messages, f, indent=2)
+        except Exception as e:
+            print(f"Error: Could not save conversation file: {e}")
 
     def validate_code_syntax(self, code_string):
         """Validate Python code syntax using AST."""
@@ -123,10 +152,15 @@ class VTKPromptClient:
             if self.verbose:
                 print("CONTEXT: " + context)
 
-        messages = [
-            {"role": "system", "content": get_python_role()},
-            {"role": "user", "content": context},
-        ]
+        # Load existing conversation or start fresh
+        messages = self.load_conversation()
+
+        # If no conversation exists, start with system role
+        if not messages:
+            messages = [{"role": "system", "content": get_python_role()}]
+
+        # Add current user message
+        messages.append({"role": "user", "content": context})
 
         # Retry loop for AST validation
         for attempt in range(retry_attempts):
@@ -167,6 +201,8 @@ class VTKPromptClient:
 
                 is_valid, error_msg = self.validate_code_syntax(generated_code)
                 if is_valid:
+                    messages.append({"role": "assistant", "content": content})
+                    self.save_conversation(messages)
                     return generated_code, response.usage
 
                 elif attempt < retry_attempts - 1:  # Don't print on last attempt
@@ -187,6 +223,9 @@ class VTKPromptClient:
                     # Last attempt failed
                     if self.verbose:
                         print(f"Final attempt failed AST validation: {error_msg}")
+
+                    messages.append({"role": "assistant", "content": content})
+                    self.save_conversation(messages)
                     return (
                         generated_code,
                         response.usage,
@@ -237,6 +276,10 @@ class VTKPromptClient:
     default=1,
     help="Number of times to retry if AST validation fails",
 )
+@click.option(
+    "--conversation",
+    help="Path to conversation file for maintaining chat history",
+)
 def main(
     input_string,
     provider,
@@ -251,6 +294,7 @@ def main(
     database,
     top_k,
     retry_attempts,
+    conversation,
 ):
     """Generate and execute VTK code using LLMs.
 
@@ -280,6 +324,7 @@ def main(
             collection_name=collection,
             database_path=database,
             verbose=verbose,
+            conversation_file=conversation,
         )
         generated_code, usage = client.query(
             input_string,
