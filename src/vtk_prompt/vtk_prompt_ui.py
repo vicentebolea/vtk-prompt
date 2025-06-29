@@ -496,8 +496,7 @@ class VTKPromptApp:
                                     )
 
                     with vuetify.VCard(style="margin-top: 10px;"):
-                        with vuetify.VCardTitle(style="padding-bottom: 0;"):
-                            "⚙️  RAG settings"
+                        vuetify.VCardTitle("⚙️  RAG settings", style="padding-bottom: 0;")
                         with vuetify.VCardText():
                             vuetify.VCheckbox(
                                 v_model=("use_rag", False),
@@ -517,8 +516,7 @@ class VTKPromptApp:
                             )
 
                     with vuetify.VCard(style="margin-top: 10px;"):
-                        with vuetify.VCardTitle(style="padding-bottom: 0;"):
-                            "⚙️ Generation Settings"
+                        vuetify.VCardTitle("⚙️ Generation Settings", style="padding-bottom: 0;")
                         with vuetify.VCardText():
                             vuetify.VSlider(
                                 label="Temperature",
@@ -555,8 +553,7 @@ class VTKPromptApp:
                         # Left column - Generated code view
                         with vuetify.VCol(cols=6, style="height: 100%;"):
                             with vuetify.VCard(style="height: 80%;"):
-                                with vuetify.VCardTitle():
-                                    "Generated Code"
+                                vuetify.VCardTitle("Generated Code")
                                 with vuetify.VCardText(
                                     style="height: calc(100% - 48px); overflow: auto;"
                                 ):
@@ -590,8 +587,7 @@ class VTKPromptApp:
                                 # Top: VTK render view
                                 with vuetify.VCol(cols=12, style="height: 60%;"):
                                     with vuetify.VCard(style="height: 100%;"):
-                                        with vuetify.VCardTitle():
-                                            "VTK Visualization"
+                                        vuetify.VCardTitle("VTK Visualization")
                                         with vuetify.VCardText(
                                             style="height: calc(100% - 48px);"
                                         ):
