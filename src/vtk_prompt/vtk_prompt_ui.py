@@ -359,7 +359,7 @@ class VTKPromptApp:
         # Initialize drawer state as collapsed
         self.state.main_drawer = True
 
-        with SinglePageWithDrawerLayout(self.server) as layout:
+        with SinglePageWithDrawerLayout(self.server, style="max-height: 100vh;") as layout:
             layout.title.set_text("VTK Prompt UI")
             with layout.toolbar:
                 vuetify.VSpacer()
@@ -369,7 +369,7 @@ class VTKPromptApp:
                     color="primary",
                     text_color="white",
                     v_show="input_tokens > 0 || output_tokens > 0",
-                    style="margin-right: 8px;",
+                    classes="mr-2",
                 ):
                     html.Span(
                         "Tokens: In: {{ input_tokens }} | Out: {{ output_tokens }}"
@@ -418,7 +418,7 @@ class VTKPromptApp:
                     with vuetify.VTabsItems(v_model="tab_index"):
                         # Cloud Providers Tab Content
                         with vuetify.VTabItem():
-                            with vuetify.VCard(flat=True, style="margin-top: 10px;"):
+                            with vuetify.VCard(flat=True, classes="mt-2"):
                                 with vuetify.VCardText():
                                     # Provider selection
                                     vuetify.VSelect(
@@ -455,7 +455,7 @@ class VTKPromptApp:
 
                         # Local Models Tab Content
                         with vuetify.VTabItem():
-                            with vuetify.VCard(flat=True, style="margin-top: 10px;"):
+                            with vuetify.VCard(flat=True, classes="mt-2"):
                                 with vuetify.VCardText():
                                     vuetify.VTextField(
                                         label="Base URL",
@@ -495,8 +495,8 @@ class VTKPromptApp:
                                         persistent_hint=True,
                                     )
 
-                    with vuetify.VCard(style="margin-top: 10px;"):
-                        vuetify.VCardTitle("⚙️  RAG settings", style="padding-bottom: 0;")
+                    with vuetify.VCard(classes="mt-2"):
+                        vuetify.VCardTitle("⚙️  RAG settings", classes="pb-0")
                         with vuetify.VCardText():
                             vuetify.VCheckbox(
                                 v_model=("use_rag", False),
@@ -515,8 +515,8 @@ class VTKPromptApp:
                                 prepend_icon="mdi-chart-scatter-plot",
                             )
 
-                    with vuetify.VCard(style="margin-top: 10px;"):
-                        vuetify.VCardTitle("⚙️ Generation Settings", style="padding-bottom: 0;")
+                    with vuetify.VCard(classes="mt-2"):
+                        vuetify.VCardTitle("⚙️ Generation Settings", classes="pb-0")
                         with vuetify.VCardText():
                             vuetify.VSlider(
                                 label="Temperature",
@@ -548,14 +548,14 @@ class VTKPromptApp:
                             )
 
             with layout.content:
-                with vuetify.VContainer(fluid=True, style="height: 100%;"):
-                    with vuetify.VRow(style="height: 100%;"):
+                with vuetify.VContainer(fluid=True, classes="fill-height"):
+                    with vuetify.VRow(rows=12, classes="fill-height"):
                         # Left column - Generated code view
-                        with vuetify.VCol(cols=6, style="height: 100%;"):
-                            with vuetify.VCard(style="height: 80%;"):
+                        with vuetify.VCol(cols=6, classes="fill-height"):
+                            with vuetify.VCard(classes="mb-2", style="height: 80%;"):
                                 vuetify.VCardTitle("Generated Code")
                                 with vuetify.VCardText(
-                                    style="height: calc(100% - 48px); overflow: auto;"
+                                    classes="overflow-auto",
                                 ):
                                     vuetify.VTextarea(
                                         v_model=("generated_code", ""),
@@ -564,10 +564,8 @@ class VTKPromptApp:
                                         hide_details=True,
                                         no_resize=True,
                                         auto_grow=True,
-                                        style=(
-                                            "font-family: monospace; min-height: 200px; "
-                                            "max-height: 80vh; overflow-y: auto;"
-                                        ),
+                                        classes="overflow-y",
+                                        style="font-family: monospace;",
                                         placeholder="Generated VTK code will appear here...",
                                     )
 
@@ -582,20 +580,20 @@ class VTKPromptApp:
                                     )
 
                         # Right column - VTK viewer and prompt
-                        with vuetify.VCol(cols=6, style="height: 100%;"):
-                            with vuetify.VRow(no_gutters=True, style="height: 100%;"):
+                        with vuetify.VCol(cols=6, classes="fill-height"):
+                            with vuetify.VRow(no_gutters=True, classes="fill-height"):
                                 # Top: VTK render view
-                                with vuetify.VCol(cols=12, style="height: 60%;"):
-                                    with vuetify.VCard(style="height: 100%;"):
+                                with vuetify.VCol(cols=12, classes="mb-2", style="height: 70%;"):
+                                    with vuetify.VCard(classes="fill-height"):
                                         vuetify.VCardTitle("VTK Visualization")
                                         with vuetify.VCardText(
-                                            style="height: calc(100% - 48px);"
+                                            style="height: 90%;"
                                         ):
                                             # VTK render window
                                             view = vtk_widgets.VtkRemoteView(
                                                 self.render_window,
                                                 ref="view",
-                                                style="width: 100%; height: 100%;",
+                                                classes="w-100 h-100",
                                                 interactor_settings=[
                                                     (
                                                         "SetInteractorStyle",
@@ -617,8 +615,8 @@ class VTKPromptApp:
                                             view.update()
 
                                 # Bottom: Prompt input
-                                with vuetify.VCol(cols=12, style="height: 40%;"):
-                                    with vuetify.VCard(style="height: 100%;"):
+                                with vuetify.VCol(cols=12, style="height: 30%;"):
+                                    with vuetify.VCard(classes="fill-height"):
                                         with vuetify.VCardText():
                                             # Cloud models chip
                                             vuetify.VChip(
@@ -627,7 +625,7 @@ class VTKPromptApp:
                                                 color="blue",
                                                 text_color="white",
                                                 label=True,
-                                                style="margin-bottom: 8px;",
+                                                classes="mb-2",
                                                 v_show="use_cloud_models",
                                             )
                                             # Local models chip
@@ -640,7 +638,7 @@ class VTKPromptApp:
                                                 color="green",
                                                 text_color="white",
                                                 label=True,
-                                                style="margin-bottom: 8px;",
+                                                classes="mb-2",
                                                 v_show="!use_cloud_models",
                                             )
 
@@ -660,7 +658,7 @@ class VTKPromptApp:
                                                 block=True,
                                                 loading=("is_loading", False),
                                                 click=self.generate_code,
-                                                style="margin-bottom: 8px;",
+                                                classes="mb-2",
                                             )
 
     def start(self):
