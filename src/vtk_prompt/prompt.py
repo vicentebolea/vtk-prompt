@@ -9,11 +9,8 @@ import click
 from dataclasses import dataclass
 from pathlib import Path
 
-from .prompts import (
-    get_no_rag_context,
-    get_rag_context,
-    get_python_role,
-)
+# Using YAML system exclusively
+from .yaml_prompt_loader import GitHubModelYAMLLoader
 
 
 @dataclass
@@ -82,30 +79,32 @@ class VTKPromptClient:
                 print(code_string)
             return None
 
-    def query(
+    def query_yaml(
         self,
         message,
         api_key,
-        model="gpt-4o",
+        prompt_name="vtk_python_code_generation",
         base_url=None,
-        max_tokens=1000,
-        temperature=0.1,
-        top_k=5,
         rag=False,
+        top_k=5,
         retry_attempts=1,
+        override_model=None,
+        override_temperature=None,
+        override_max_tokens=None,
     ):
-        """Generate VTK code with optional RAG enhancement and retry logic.
+        """Generate VTK code using YAML prompt templates.
 
         Args:
             message: The user query
             api_key: API key for the service
-            model: Model name to use
+            prompt_name: Name of the YAML prompt file to use
             base_url: API base URL
-            max_tokens: Maximum tokens to generate
-            temperature: Temperature for generation
-            top_k: Number of RAG examples to retrieve
             rag: Whether to use RAG enhancement
-            retry_attempts: Number of times to retry if AST validation fails
+            top_k: Number of RAG examples to retrieve
+            retry_attempts: Number of retry attempts for failed generations
+
+        Returns:
+            Generated code string or None if failed
         """
         if not api_key:
             api_key = os.environ.get("OPENAI_API_KEY")
@@ -118,6 +117,18 @@ class VTKPromptClient:
         # Create client with current parameters
         client = openai.OpenAI(api_key=api_key, base_url=base_url)
 
+        # Load YAML prompt configuration
+        from pathlib import Path
+
+        prompts_dir = Path(__file__).parent / "prompts"
+        yaml_loader = GitHubModelYAMLLoader(prompts_dir)
+        model_params = yaml_loader.get_model_parameters(prompt_name)
+        model = override_model or yaml_loader.get_model_name(prompt_name)
+
+        # Prepare variables for template substitution
+        variables = {"request": message}
+
+        # Handle RAG if requested
         if rag:
             from .rag_chat_wrapper import (
                 check_rag_components_available,
@@ -138,29 +149,33 @@ class VTKPromptClient:
                 raise ValueError("Failed to load RAG snippets")
 
             context_snippets = "\n\n".join(rag_snippets["code_snippets"])
-            context = get_rag_context(message, context_snippets)
+            variables["context_snippets"] = context_snippets
 
             if self.verbose:
-                print("CONTEXT: " + context)
                 references = rag_snippets.get("references")
                 if references:
                     print("Using examples from:")
                     for ref in references:
                         print(f"- {ref}")
-        else:
-            context = get_no_rag_context(message)
-            if self.verbose:
-                print("CONTEXT: " + context)
 
         # Load existing conversation or start fresh
-        messages = self.load_conversation()
+        conversation_messages = self.load_conversation()
 
-        # If no conversation exists, start with system role
-        if not messages:
-            messages = [{"role": "system", "content": get_python_role()}]
+        # Build base messages from YAML template
+        base_messages = yaml_loader.build_messages(prompt_name, variables)
 
-        # Add current user message
-        messages.append({"role": "user", "content": context})
+        # If conversation exists, extend it with new user message
+        if conversation_messages:
+            # Add the current request as a new user message
+            conversation_messages.append({"role": "user", "content": message})
+            messages = conversation_messages
+        else:
+            # Use YAML template as starting point
+            messages = base_messages
+
+        # Extract parameters with overrides
+        temperature = override_temperature or model_params.get("temperature", 0.3)
+        max_tokens = override_max_tokens or model_params.get("max_tokens", 2000)
 
         # Retry loop for AST validation
         for attempt in range(retry_attempts):
@@ -191,50 +206,47 @@ class VTKPromptClient:
 
                 generated_code = None
                 if "import vtk" not in content:
-                    generated_code = "import vtk\n" + content
+                    generated_code = f"import vtk\n{content}"
                 else:
-                    pos = content.find("import vtk")
-                    if pos != -1:
-                        generated_code = content[pos:]
-                    else:
-                        generated_code = content
+                    generated_code = content
 
                 is_valid, error_msg = self.validate_code_syntax(generated_code)
                 if is_valid:
+                    # Save conversation with assistant response
                     messages.append({"role": "assistant", "content": content})
                     self.save_conversation(messages)
-                    return generated_code, response.usage
 
-                elif attempt < retry_attempts - 1:  # Don't print on last attempt
                     if self.verbose:
-                        print(f"AST validation failed: {error_msg}. Retrying...")
-                    # Add error feedback to context for retry
-                    messages.append({"role": "assistant", "content": content})
-                    messages.append(
-                        {
-                            "role": "user",
-                            "content": (
-                                f"The generated code has a syntax error: {error_msg}. "
-                                "Please fix the syntax and generate valid Python code."
-                            ),
-                        }
-                    )
+                        print("Code validation successful!")
+                    return generated_code
                 else:
-                    # Last attempt failed
                     if self.verbose:
-                        print(f"Final attempt failed AST validation: {error_msg}")
+                        print(
+                            f"Code validation failed on attempt {attempt + 1}: {error_msg}"
+                        )
+                        print("Generated code:")
+                        print(generated_code)
 
-                    messages.append({"role": "assistant", "content": content})
-                    self.save_conversation(messages)
-                    return (
-                        generated_code,
-                        response.usage,
-                    )  # Return anyway, let caller handle
+                    if attempt < retry_attempts - 1:
+                        # Add error feedback to messages for retry
+                        error_feedback = (
+                            f"The previous code had a syntax error: {error_msg}. "
+                            "Please fix the syntax and try again."
+                        )
+                        messages.append({"role": "user", "content": error_feedback})
+                    else:
+                        # Save conversation even if final attempt failed
+                        messages.append({"role": "assistant", "content": content})
+                        self.save_conversation(messages)
+                        print(
+                            f"All {retry_attempts} attempts failed. Final error: {error_msg}"
+                        )
+                        return generated_code  # Return anyway, let caller handle
             else:
-                if attempt == retry_attempts - 1:
-                    return "No response generated", response.usage
+                print("No response content received")
+                return None
 
-        return "No response generated"
+        return None
 
 
 @click.command()
@@ -245,14 +257,14 @@ class VTKPromptClient:
     default="openai",
     help="LLM provider to use",
 )
-@click.option("-m", "--model", default="gpt-4o", help="Model name to use")
+@click.option("-m", "--model", default="gpt-4o-mini", help="Model name to use")
 @click.option(
     "-k", "--max-tokens", type=int, default=1000, help="Max # of tokens to generate"
 )
 @click.option(
     "--temperature",
     type=float,
-    default=0.7,
+    default=0.1,
     help="Temperature for generation (0.0-2.0)",
 )
 @click.option(
@@ -296,7 +308,7 @@ def main(
     retry_attempts,
     conversation,
 ):
-    """Generate and execute VTK code using LLMs.
+    """Generate and execute VTK code using LLMs with YAML prompts.
 
     INPUT_STRING: The code description to generate VTK code for
     """
@@ -326,22 +338,26 @@ def main(
             verbose=verbose,
             conversation_file=conversation,
         )
-        generated_code, usage = client.query(
+
+        # Use YAML system directly
+        prompt_name = "rag_context" if rag else "no_rag_context"
+        generated_code = client.query_yaml(
             input_string,
             api_key=token,
-            model=model,
+            prompt_name=prompt_name,
             base_url=base_url,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            top_k=top_k,
             rag=rag,
+            top_k=top_k,
             retry_attempts=retry_attempts,
+            # Override parameters if specified in CLI
+            override_model=model if model != "gpt-4o-mini" else None,
+            override_temperature=temperature if temperature != 0.1 else None,
+            override_max_tokens=max_tokens if max_tokens != 1000 else None,
         )
 
-        if verbose and usage is not None:
-            print(
-                f"Used tokens: input={usage.prompt_tokens} output={usage.completion_tokens}"
-            )
+        # Usage tracking not yet implemented for YAML system
+        if verbose:
+            print("Token usage tracking not available in YAML mode")
 
         client.run_code(generated_code)
 
