@@ -3,10 +3,11 @@
 # Add VTK and Trame imports
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 from trame.app import get_server
-from trame.widgets import vuetify, html
+from trame.widgets import html
+from trame.widgets import vuetify3 as vuetify
 from trame_vtk.widgets import vtk as vtk_widgets
-from trame.ui.vuetify import SinglePageWithDrawerLayout
-
+from trame.ui.vuetify3 import SinglePageWithDrawerLayout
+from trame.widgets import html
 import vtk
 
 # Import our prompt functionality
@@ -24,7 +25,7 @@ EXPLAIN_RENDERER = (
 
 class VTKPromptApp:
     def __init__(self):
-        self.server = get_server(client_type="vue2")
+        self.server = get_server(client_type="vue3")
         self.state = self.server.state
         self.ctrl = self.server.controller
 
@@ -359,7 +360,7 @@ class VTKPromptApp:
         # Initialize drawer state as collapsed
         self.state.main_drawer = True
 
-        with SinglePageWithDrawerLayout(self.server, style="max-height: 100vh;") as layout:
+        with SinglePageWithDrawerLayout(self.server, theme=("theme_mode", "light"), style="max-height: 100vh;") as layout:
             layout.title.set_text("VTK Prompt UI")
             with layout.toolbar:
                 vuetify.VSpacer()
@@ -390,10 +391,13 @@ class VTKPromptApp:
                     vuetify.VIcon("mdi-camera-retake-outline")
 
                 vuetify.VSwitch(
-                    v_model=("$vuetify.theme.dark"),
+                    v_model=("theme_mode", "light"),
                     hide_details=True,
-                    dense=True,
+                    density="compact",
                     label="Dark Mode",
+                    classes="mr-2",
+                    true_value="dark",
+                    false_value="light",
                 )
 
             with layout.drawer as drawer:
@@ -415,18 +419,18 @@ class VTKPromptApp:
                                 vuetify.VTab("🏠Local")
 
                     # Tab Content
-                    with vuetify.VTabsItems(v_model="tab_index"):
+                    with vuetify.VTabsWindow(v_model="tab_index"):
                         # Cloud Providers Tab Content
-                        with vuetify.VTabItem():
-                            with vuetify.VCard(flat=True, classes="mt-2"):
+                        with vuetify.VTabsWindowItem():
+                            with vuetify.VCard(flat=True, style="mt-2"):
                                 with vuetify.VCardText():
                                     # Provider selection
                                     vuetify.VSelect(
                                         label="Provider",
                                         v_model=("provider", "openai"),
                                         items=("available_providers", []),
-                                        dense=True,
-                                        outlined=True,
+                                        density="compact",
+                                        variant="outlined",
                                         prepend_icon="mdi-cloud",
                                     )
 
@@ -435,8 +439,8 @@ class VTKPromptApp:
                                         label="Model",
                                         v_model=("model", "gpt-4o"),
                                         items=("available_models[provider] || []",),
-                                        dense=True,
-                                        outlined=True,
+                                        density="compact",
+                                        variant="outlined",
                                         prepend_icon="mdi-brain",
                                     )
 
@@ -446,16 +450,16 @@ class VTKPromptApp:
                                         v_model=("api_token", ""),
                                         placeholder="Enter your API token",
                                         type="password",
-                                        dense=True,
-                                        outlined=True,
+                                        density="compact",
+                                        variant="outlined",
                                         prepend_icon="mdi-key",
                                         hint="Required for cloud providers",
                                         persistent_hint=True,
                                     )
 
                         # Local Models Tab Content
-                        with vuetify.VTabItem():
-                            with vuetify.VCard(flat=True, classes="mt-2"):
+                        with vuetify.VTabsWindowItem():
+                            with vuetify.VCard(flat=True, style="mt-2"):
                                 with vuetify.VCardText():
                                     vuetify.VTextField(
                                         label="Base URL",
@@ -464,8 +468,8 @@ class VTKPromptApp:
                                             "http://localhost:11434/v1",
                                         ),
                                         placeholder="http://localhost:11434/v1",
-                                        dense=True,
-                                        outlined=True,
+                                        density="compact",
+                                        variant="outlined",
                                         prepend_icon="mdi-server",
                                         hint="Ollama, LM Studio, etc.",
                                         persistent_hint=True,
@@ -475,8 +479,8 @@ class VTKPromptApp:
                                         label="Model Name",
                                         v_model=("local_model", "devstral"),
                                         placeholder="devstral",
-                                        dense=True,
-                                        outlined=True,
+                                        density="compact",
+                                        variant="outlined",
                                         prepend_icon="mdi-brain",
                                         hint="Model identifier",
                                         persistent_hint=True,
@@ -488,8 +492,8 @@ class VTKPromptApp:
                                         v_model=("api_token", "ollama"),
                                         placeholder="ollama",
                                         type="password",
-                                        dense=True,
-                                        outlined=True,
+                                        density="compact",
+                                        variant="outlined",
                                         prepend_icon="mdi-key",
                                         hint="Optional for local servers",
                                         persistent_hint=True,
@@ -502,6 +506,7 @@ class VTKPromptApp:
                                 v_model=("use_rag", False),
                                 label="RAG",
                                 prepend_icon="mdi-bookshelf",
+                                density="compact",
                             )
                             vuetify.VTextField(
                                 label="Top K",
@@ -509,9 +514,9 @@ class VTKPromptApp:
                                 type="number",
                                 min=1,
                                 max=15,
-                                dense=True,
+                                density="compact",
                                 disabled=("!use_rag",),
-                                outlined=True,
+                                variant="outlined",
                                 prepend_icon="mdi-chart-scatter-plot",
                             )
 
@@ -527,13 +532,14 @@ class VTKPromptApp:
                                 thumb_label="always",
                                 color="orange",
                                 prepend_icon="mdi-thermometer",
+                                classes="mt-2",
                             )
                             vuetify.VTextField(
                                 label="Max Tokens",
                                 v_model=("max_tokens", 1000),
                                 type="number",
-                                dense=True,
-                                outlined=True,
+                                density="compact",
+                                variant="outlined",
                                 prepend_icon="mdi-format-text",
                             )
                             vuetify.VTextField(
@@ -542,8 +548,8 @@ class VTKPromptApp:
                                 type="number",
                                 min=1,
                                 max=5,
-                                dense=True,
-                                outlined=True,
+                                density="compact",
+                                variant="outlined",
                                 prepend_icon="mdi-repeat",
                             )
 
@@ -576,7 +582,7 @@ class VTKPromptApp:
                                         "{{ error_message }}",
                                         type="error",
                                         v_show=("error_message", ""),
-                                        dense=True,
+                                        density="compact",
                                     )
 
                         # Right column - VTK viewer and prompt
@@ -647,7 +653,7 @@ class VTKPromptApp:
                                                 label="Describe VTK visualization",
                                                 v_model=("query_text", ""),
                                                 rows=4,
-                                                outlined=True,
+                                                variant="outlined",
                                                 placeholder="e.g., Create a red sphere with lighting",
                                             )
 
