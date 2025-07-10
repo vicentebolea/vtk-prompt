@@ -558,7 +558,7 @@ class VTKPromptApp:
                     with vuetify.VRow(rows=12, classes="fill-height"):
                         # Left column - Generated code view
                         with vuetify.VCol(cols=6, classes="fill-height"):
-                            with vuetify.VCard(classes="mb-2", style="height: 80%;"):
+                            with vuetify.VCard(classes="mb-2", style="height: 100%;"):
                                 vuetify.VCardTitle("Generated Code")
                                 with vuetify.VCardText(
                                     classes="overflow-auto",
@@ -573,16 +573,6 @@ class VTKPromptApp:
                                         classes="overflow-y",
                                         style="font-family: monospace;",
                                         placeholder="Generated VTK code will appear here...",
-                                    )
-
-                            with vuetify.VCard(style="height: 20%;"):
-                                with vuetify.VCardText():
-                                    # Error message
-                                    vuetify.VAlert(
-                                        "{{ error_message }}",
-                                        type="error",
-                                        v_show=("error_message", ""),
-                                        density="compact",
                                     )
 
                         # Right column - VTK viewer and prompt
@@ -667,6 +657,16 @@ class VTKPromptApp:
                                                 classes="mb-2",
                                             )
 
+            vuetify.VAlert(
+                closable=True,
+                v_show=("error_message", ""),
+                density="compact",
+                type="error",
+                text=("error_message",),
+                classes="h-auto position-absolute bottom-0 align-self-center mb-1",
+                style="width: 30%; z-index: 1000;",
+                icon="mdi-alert-outline",
+            )
     def start(self):
         """Start the trame server."""
         self.server.start()
