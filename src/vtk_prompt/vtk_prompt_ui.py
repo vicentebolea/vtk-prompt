@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+from pathlib import Path
+from tkinter import Tk, filedialog
+
 # Add VTK and Trame imports
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 from trame.app import get_server
@@ -27,6 +30,12 @@ class VTKPromptApp:
         self.server = get_server(client_type="vue3")
         self.state = self.server.state
         self.ctrl = self.server.controller
+
+        root = Tk()
+        # Ensure the tkinter main window is hidden
+        root.withdraw()
+        # Ensure that the file browser will appear in front on Windows
+        root.wm_attributes("-topmost", 1)
 
         # Initialize VTK components for trame
         self.renderer = vtk.vtkRenderer()
@@ -73,6 +82,9 @@ class VTKPromptApp:
         self.state.is_loading = False
         self.state.use_rag = False
         self.state.error_message = ""
+        self.state.conversation_file = None
+        self.state.conversation_file_name = None
+        self.state.working_directory = str(Path.cwd())
 
         # Token usage tracking
         self.state.input_tokens = 0
@@ -139,6 +151,7 @@ class VTKPromptApp:
                 collection_name="vtk-examples",
                 database_path="./db/codesage-codesage-large-v2",
                 verbose=False,
+                conversation_file=self.state.conversation_file,
             )
         except ValueError as e:
             self.state.error_message = str(e)
@@ -254,6 +267,18 @@ class VTKPromptApp:
             self.ctrl.view_update()
         except Exception as e:
             print(f"Error resetting camera: {e}")
+
+    def use_existing_conversation_file(self, **kwargs):
+        kwargs = {
+            "title": "Select Conversation File",
+            "initialdir": self.state.working_directory,
+            "filetypes": [("JSON files", "*.json")],
+        }
+        selected_file = filedialog.askopenfilename(**kwargs)
+        if selected_file:
+            self.state.conversation_file = selected_file
+            self.state.working_directory = str(Path(selected_file).parent)
+            self.state.conversation_file_name = Path(selected_file).name
 
     def _generate_and_execute_code(self):
         """Generate VTK code using Anthropic API and execute it."""
@@ -553,6 +578,35 @@ class VTKPromptApp:
                                 variant="outlined",
                                 prepend_icon="mdi-repeat",
                             )
+
+                    with vuetify.VCard(classes="mt-2"):
+                        with vuetify.VCardTitle(
+                            hide_details=True,
+                            density="compact",
+                        ) as title:
+                            vuetify.VIcon(
+                                "mdi-forum-outline",
+                                classes="mr-2"
+                            )
+                            title.add_child("Conversation Settings")
+                        with vuetify.VCardText():
+                            vuetify.VBtn(
+                                "Load File",
+                                color="primary",
+                                append_icon="mdi-tray-arrow-up",
+                                click=self.use_existing_conversation_file,
+                                classes="mb-2",
+                                block=True,
+                            )
+                            with html.Div(v_show=("!conversation_file",)):
+                                with html.Span(classes="text-red text-sm font-italic") as span:
+                                    vuetify.VIcon("mdi-alert-outline", classes="mr-2")
+                                    span.add_child("Load conversation file to enable save")
+                            with vuetify.VTooltip(text=("conversation_file",), location="bottom"):
+                                with vuetify.Template(v_slot_activator="{ props }"):
+                                    with html.Div(v_show=("conversation_file",)):
+                                        vuetify.VIcon("mdi-paperclip", classes="mr-2", v_bind="props")
+                                        html.Span("{{ conversation_file_name }}")
 
             with layout.content:
                 with vuetify.VContainer(fluid=True, classes="fill-height"):
