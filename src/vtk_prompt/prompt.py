@@ -84,8 +84,8 @@ class VTKPromptClient:
 
     def query(
         self,
-        message,
-        api_key,
+        message="",
+        api_key=None,
         model="gpt-4o",
         base_url=None,
         max_tokens=1000,
@@ -117,6 +117,12 @@ class VTKPromptClient:
 
         # Create client with current parameters
         client = openai.OpenAI(api_key=api_key, base_url=base_url)
+
+        # Load existing conversation if present
+        messages = self.load_conversation()
+
+        if not message and not messages:
+            raise ValueError("No prompt or conversation file provided")
 
         if rag:
             from .rag_chat_wrapper import (
@@ -152,15 +158,13 @@ class VTKPromptClient:
             if self.verbose:
                 print("CONTEXT: " + context)
 
-        # Load existing conversation or start fresh
-        messages = self.load_conversation()
-
         # If no conversation exists, start with system role
         if not messages:
             messages = [{"role": "system", "content": get_python_role()}]
 
         # Add current user message
-        messages.append({"role": "user", "content": context})
+        if message:
+            messages.append({"role": "user", "content": context})
 
         # Retry loop for AST validation
         for attempt in range(retry_attempts):
@@ -201,8 +205,9 @@ class VTKPromptClient:
 
                 is_valid, error_msg = self.validate_code_syntax(generated_code)
                 if is_valid:
-                    messages.append({"role": "assistant", "content": content})
-                    self.save_conversation(messages)
+                    if message:
+                        messages.append({"role": "assistant", "content": content})
+                        self.save_conversation(messages)
                     return generated_code, response.usage
 
                 elif attempt < retry_attempts - 1:  # Don't print on last attempt
@@ -224,8 +229,9 @@ class VTKPromptClient:
                     if self.verbose:
                         print(f"Final attempt failed AST validation: {error_msg}")
 
-                    messages.append({"role": "assistant", "content": content})
-                    self.save_conversation(messages)
+                    if message:
+                        messages.append({"role": "assistant", "content": content})
+                        self.save_conversation(messages)
                     return (
                         generated_code,
                         response.usage,

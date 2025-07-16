@@ -282,17 +282,15 @@ class VTKPromptApp:
 
     def _generate_and_execute_code(self):
         """Generate VTK code using Anthropic API and execute it."""
-        if not self.state.query_text.strip():
-            self.state.error_message = "Please enter a query"
-            return
-
         self.state.is_loading = True
         self.state.error_message = ""
 
         try:
             # Generate code using prompt functionality - reuse existing methods
-            post_prompt = get_ui_post_prompt()
-            enhanced_query = post_prompt + self.state.query_text
+            enhanced_query = self.state.query_text
+            if self.state.query_text:
+                post_prompt = get_ui_post_prompt()
+                enhanced_query = post_prompt + self.state.query_text
 
             # Reinitialize client with current settings
             self._init_prompt_client()
@@ -590,14 +588,27 @@ class VTKPromptApp:
                             )
                             title.add_child("Conversation Settings")
                         with vuetify.VCardText():
-                            vuetify.VBtn(
-                                "Load File",
-                                color="primary",
-                                append_icon="mdi-tray-arrow-up",
-                                click=self.use_existing_conversation_file,
-                                classes="mb-2",
-                                block=True,
-                            )
+                            with html.Div(classes="d-flex align-center justify-space-between"):
+                                vuetify.VBtn(
+                                    "Load File",
+                                    color="primary",
+                                    append_icon="mdi-tray-arrow-up",
+                                    click=self.use_existing_conversation_file,
+                                    classes="mb-2 mr-2 flex-grow-1",
+                                )
+                                with vuetify.VTooltip(text="Re-run loaded conversation file", location="bottom"):
+                                    with vuetify.Template(v_slot_activator="{ props }"):
+                                        with vuetify.VBtn(
+                                            icon=True,
+                                            classes="mb-2 p-0",
+                                            density="comfortable",
+                                            color="secondary",
+                                            rounded="lg",
+                                            v_bind="props",
+                                            click=self.generate_code,
+                                            disabled=("!conversation_file",),
+                                        ):
+                                            vuetify.VIcon("mdi-refresh")
                             with html.Div(v_show=("!conversation_file",)):
                                 with html.Span(classes="text-red text-sm font-italic") as span:
                                     vuetify.VIcon("mdi-alert-outline", classes="mr-2")
@@ -710,6 +721,7 @@ class VTKPromptApp:
                                                 loading=("is_loading", False),
                                                 click=self.generate_code,
                                                 classes="mb-2",
+                                                disabled=("!query_text.trim()",),
                                             )
 
             vuetify.VAlert(
