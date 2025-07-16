@@ -7,7 +7,6 @@ from trame.widgets import html
 from trame.widgets import vuetify3 as vuetify
 from trame_vtk.widgets import vtk as vtk_widgets
 from trame.ui.vuetify3 import SinglePageWithDrawerLayout
-from trame.widgets import html
 import vtk
 
 # Import our prompt functionality
@@ -360,7 +359,9 @@ class VTKPromptApp:
         # Initialize drawer state as collapsed
         self.state.main_drawer = True
 
-        with SinglePageWithDrawerLayout(self.server, theme=("theme_mode", "light"), style="max-height: 100vh;") as layout:
+        with SinglePageWithDrawerLayout(
+            self.server, theme=("theme_mode", "light"), style="max-height: 100vh;"
+        ) as layout:
             layout.title.set_text("VTK Prompt UI")
             with layout.toolbar:
                 vuetify.VSpacer()
@@ -579,12 +580,12 @@ class VTKPromptApp:
                         with vuetify.VCol(cols=6, classes="fill-height"):
                             with vuetify.VRow(no_gutters=True, classes="fill-height"):
                                 # Top: VTK render view
-                                with vuetify.VCol(cols=12, classes="mb-2", style="height: 70%;"):
+                                with vuetify.VCol(
+                                    cols=12, classes="mb-2", style="height: 70%;"
+                                ):
                                     with vuetify.VCard(classes="fill-height"):
                                         vuetify.VCardTitle("VTK Visualization")
-                                        with vuetify.VCardText(
-                                            style="height: 90%;"
-                                        ):
+                                        with vuetify.VCardText(style="height: 90%;"):
                                             # VTK render window
                                             view = vtk_widgets.VtkRemoteView(
                                                 self.render_window,
@@ -667,6 +668,7 @@ class VTKPromptApp:
                 style="width: 30%; z-index: 1000;",
                 icon="mdi-alert-outline",
             )
+
     def start(self):
         """Start the trame server."""
         self.server.start()
