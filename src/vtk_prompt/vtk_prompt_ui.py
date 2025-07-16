@@ -582,13 +582,12 @@ class VTKPromptApp:
                             hide_details=True,
                             density="compact",
                         ) as title:
-                            vuetify.VIcon(
-                                "mdi-forum-outline",
-                                classes="mr-2"
-                            )
+                            vuetify.VIcon("mdi-forum-outline", classes="mr-2")
                             title.add_child("Conversation Settings")
                         with vuetify.VCardText():
-                            with html.Div(classes="d-flex align-center justify-space-between"):
+                            with html.Div(
+                                classes="d-flex align-center justify-space-between"
+                            ):
                                 vuetify.VBtn(
                                     "Load File",
                                     color="primary",
@@ -596,7 +595,10 @@ class VTKPromptApp:
                                     click=self.use_existing_conversation_file,
                                     classes="mb-2 mr-2 flex-grow-1",
                                 )
-                                with vuetify.VTooltip(text="Re-run loaded conversation file", location="bottom"):
+                                with vuetify.VTooltip(
+                                    text="Re-run loaded conversation file",
+                                    location="bottom",
+                                ):
                                     with vuetify.Template(v_slot_activator="{ props }"):
                                         with vuetify.VBtn(
                                             icon=True,
@@ -610,13 +612,23 @@ class VTKPromptApp:
                                         ):
                                             vuetify.VIcon("mdi-refresh")
                             with html.Div(v_show=("!conversation_file",)):
-                                with html.Span(classes="text-red text-sm font-italic") as span:
+                                with html.Span(
+                                    classes="text-red text-sm font-italic"
+                                ) as span:
                                     vuetify.VIcon("mdi-alert-outline", classes="mr-2")
-                                    span.add_child("Load conversation file to enable save")
-                            with vuetify.VTooltip(text=("conversation_file",), location="bottom"):
+                                    span.add_child(
+                                        "Load conversation file to enable save"
+                                    )
+                            with vuetify.VTooltip(
+                                text=("conversation_file",), location="bottom"
+                            ):
                                 with vuetify.Template(v_slot_activator="{ props }"):
                                     with html.Div(v_show=("conversation_file",)):
-                                        vuetify.VIcon("mdi-paperclip", classes="mr-2", v_bind="props")
+                                        vuetify.VIcon(
+                                            "mdi-paperclip",
+                                            classes="mr-2",
+                                            v_bind="props",
+                                        )
                                         html.Span("{{ conversation_file_name }}")
 
             with layout.content:
