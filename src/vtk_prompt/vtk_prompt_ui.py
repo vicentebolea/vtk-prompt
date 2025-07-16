@@ -730,7 +730,7 @@ class VTKPromptApp:
                                                 "Generate Code",
                                                 color="primary",
                                                 block=True,
-                                                loading=("is_loading", False),
+                                                loading=("trame__busy", False),
                                                 click=self.generate_code,
                                                 classes="mb-2",
                                                 disabled=("!query_text.trim()",),
