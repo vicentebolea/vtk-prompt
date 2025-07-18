@@ -197,15 +197,15 @@ class VTKPromptClient:
                         f"Output was truncated due to max_tokens limit ({max_tokens}). Please increase max_tokens."
                     )
 
-                generated_code = None
-                if "import vtk" not in content:
-                    generated_code = "import vtk\n" + content
+                generated_explanation, generated_code = content.split("\n\n", 1)
+                if "import vtk" not in generated_code:
+                    generated_code = "import vtk\n" + generated_code
                 else:
-                    pos = content.find("import vtk")
+                    pos = generated_code.find("import vtk")
                     if pos != -1:
-                        generated_code = content[pos:]
+                        generated_code = generated_code[pos:]
                     else:
-                        generated_code = content
+                        generated_code = generated_code
 
                 is_valid, error_msg = self.validate_code_syntax(generated_code)
                 if is_valid:
@@ -214,7 +214,7 @@ class VTKPromptClient:
                             {"role": "assistant", "content": content}
                         )
                         self.save_conversation()
-                    return generated_code, response.usage
+                    return generated_explanation, generated_code, response.usage
 
                 elif attempt < retry_attempts - 1:  # Don't print on last attempt
                     if self.verbose:
@@ -241,6 +241,7 @@ class VTKPromptClient:
                         )
                         self.save_conversation()
                     return (
+                        generated_explanation,
                         generated_code,
                         response.usage,
                     )  # Return anyway, let caller handle
