@@ -24,9 +24,13 @@ class VTKPromptClient:
     database_path: str = "./db/codesage-codesage-large-v2"
     verbose: bool = False
     conversation_file: str = None
+    conversation: list = None
 
     def load_conversation(self):
         """Load conversation history from file."""
+        if not self.conversation:
+            return []
+
         if not self.conversation_file or not Path(self.conversation_file).exists():
             return []
 
@@ -35,11 +39,10 @@ class VTKPromptClient:
                 return json.load(f)
         except Exception as e:
             print(f"Error: Could not load conversation file: {e}")
-            return []
 
-    def save_conversation(self, messages):
+    def save_conversation(self):
         """Save conversation history to file."""
-        if not self.conversation_file:
+        if not self.conversation_file or not self.conversation:
             return
 
         try:
@@ -47,7 +50,7 @@ class VTKPromptClient:
             Path(self.conversation_file).parent.mkdir(parents=True, exist_ok=True)
 
             with open(self.conversation_file, "w") as f:
-                json.dump(messages, f, indent=2)
+                json.dump(self.conversation, f, indent=2)
         except Exception as e:
             print(f"Error: Could not save conversation file: {e}")
 
@@ -119,9 +122,10 @@ class VTKPromptClient:
         client = openai.OpenAI(api_key=api_key, base_url=base_url)
 
         # Load existing conversation if present
-        messages = self.load_conversation()
+        if self.conversation_file and not self.conversation:
+            self.conversation = self.load_conversation()
 
-        if not message and not messages:
+        if not message and not self.conversation:
             raise ValueError("No prompt or conversation file provided")
 
         if rag:
@@ -159,12 +163,12 @@ class VTKPromptClient:
                 print("CONTEXT: " + context)
 
         # If no conversation exists, start with system role
-        if not messages:
-            messages = [{"role": "system", "content": get_python_role()}]
+        if not self.conversation:
+            self.conversation = [{"role": "system", "content": get_python_role()}]
 
         # Add current user message
         if message:
-            messages.append({"role": "user", "content": context})
+            self.conversation.append({"role": "user", "content": context})
 
         # Retry loop for AST validation
         for attempt in range(retry_attempts):
@@ -172,12 +176,12 @@ class VTKPromptClient:
                 if attempt > 0:
                     print(f"Retry attempt {attempt + 1}/{retry_attempts}")
                 print(f"Making request with model: {model}, temperature: {temperature}")
-                for i, msg in enumerate(messages):
+                for i, msg in enumerate(self.conversation):
                     print(f"Message {i} ({msg['role']}): {msg['content'][:100]}...")
 
             response = client.chat.completions.create(
                 model=model,
-                messages=messages,
+                messages=self.conversation,
                 max_tokens=max_tokens,
                 temperature=temperature,
             )
@@ -206,16 +210,18 @@ class VTKPromptClient:
                 is_valid, error_msg = self.validate_code_syntax(generated_code)
                 if is_valid:
                     if message:
-                        messages.append({"role": "assistant", "content": content})
-                        self.save_conversation(messages)
+                        self.conversation.append(
+                            {"role": "assistant", "content": content}
+                        )
+                        self.save_conversation()
                     return generated_code, response.usage
 
                 elif attempt < retry_attempts - 1:  # Don't print on last attempt
                     if self.verbose:
                         print(f"AST validation failed: {error_msg}. Retrying...")
                     # Add error feedback to context for retry
-                    messages.append({"role": "assistant", "content": content})
-                    messages.append(
+                    self.conversation.append({"role": "assistant", "content": content})
+                    self.conversation.append(
                         {
                             "role": "user",
                             "content": (
@@ -230,8 +236,10 @@ class VTKPromptClient:
                         print(f"Final attempt failed AST validation: {error_msg}")
 
                     if message:
-                        messages.append({"role": "assistant", "content": content})
-                        self.save_conversation(messages)
+                        self.conversation.append(
+                            {"role": "assistant", "content": content}
+                        )
+                        self.save_conversation()
                     return (
                         generated_code,
                         response.usage,
