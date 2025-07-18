@@ -654,14 +654,27 @@ class VTKPromptApp(TrameApp):
                                             vuetify.VIcon("mdi-file-download-outline")
 
             with layout.content:
-                with vuetify.VContainer(classes="fluid fill-height", style="min-width: 100%;"):
+                with vuetify.VContainer(
+                    classes="fluid fill-height", style="min-width: 100%;"
+                ):
                     with vuetify.VRow(rows=12, classes="fill-height"):
                         # Left column - Generated code view
                         with vuetify.VCol(cols=6, classes="fill-height"):
-                            with vuetify.VExpansionPanels(v_model=("explanation_expanded", [0, 1]), classes="fill-height", multiple=True):
-                                with vuetify.VExpansionPanel(classes="mt-1", style="height: fit-content; max-height: 30%;"):
-                                    vuetify.VExpansionPanelTitle("Explanation", classes="text-h6")
-                                    with vuetify.VExpansionPanelText(style="overflow: hidden;"):
+                            with vuetify.VExpansionPanels(
+                                v_model=("explanation_expanded", [0, 1]),
+                                classes="fill-height",
+                                multiple=True,
+                            ):
+                                with vuetify.VExpansionPanel(
+                                    classes="mt-1",
+                                    style="height: fit-content; max-height: 30%;",
+                                ):
+                                    vuetify.VExpansionPanelTitle(
+                                        "Explanation", classes="text-h6"
+                                    )
+                                    with vuetify.VExpansionPanelText(
+                                        style="overflow: hidden;"
+                                    ):
                                         vuetify.VTextarea(
                                             v_model=("generated_explanation", ""),
                                             readonly=True,
@@ -671,9 +684,21 @@ class VTKPromptApp(TrameApp):
                                             classes="overflow-y-auto fill-height",
                                             placeholder="Explanation will appear here...",
                                         )
-                                with vuetify.VExpansionPanel(classes="mt-1 fill-height", readonly=True, style=("explanation_expanded.length > 1 ? 'max-height: 75%;' : 'max-height: 95%;'",)):
-                                    vuetify.VExpansionPanelTitle("Generated Code", collapse_icon=False, classes="text-h6")
-                                    with vuetify.VExpansionPanelText(style="overflow: hidden; height: 90%;"):
+                                with vuetify.VExpansionPanel(
+                                    classes="mt-1 fill-height",
+                                    readonly=True,
+                                    style=(
+                                        "explanation_expanded.length > 1 ? 'max-height: 75%;' : 'max-height: 95%;'",
+                                    ),
+                                ):
+                                    vuetify.VExpansionPanelTitle(
+                                        "Generated Code",
+                                        collapse_icon=False,
+                                        classes="text-h6",
+                                    )
+                                    with vuetify.VExpansionPanelText(
+                                        style="overflow: hidden; height: 90%;"
+                                    ):
                                         vuetify.VTextarea(
                                             v_model=("generated_code", ""),
                                             readonly=True,
