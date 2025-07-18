@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 
+import json
+from pathlib import Path
+
 # Add VTK and Trame imports
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
-from trame.app import get_server
+from trame.app import TrameApp
+from trame.decorators import change, trigger
 from trame.widgets import html
 from trame.widgets import vuetify3 as vuetify
 from trame_vtk.widgets import vtk as vtk_widgets
@@ -22,11 +26,22 @@ EXPLAIN_RENDERER = (
 )
 
 
-class VTKPromptApp:
-    def __init__(self):
-        self.server = get_server(client_type="vue3")
-        self.state = self.server.state
-        self.ctrl = self.server.controller
+def load_js(server):
+    js_file = Path(__file__).with_name("utils.js")
+    server.enable_module(
+        dict(
+            serve={"vtk_prompt": str(js_file.parent)},
+            scripts=[f"vtk_prompt/{js_file.name}"],
+        )
+    )
+
+
+class VTKPromptApp(TrameApp):
+    def __init__(self, server=None):
+        super().__init__(server=server, client_type="vue3")
+
+        # Make sure JS is loaded
+        load_js(self.server)
 
         # Initialize VTK components for trame
         self.renderer = vtk.vtkRenderer()
@@ -73,6 +88,9 @@ class VTKPromptApp:
         self.state.is_loading = False
         self.state.use_rag = False
         self.state.error_message = ""
+        self.state.conversation_object = None
+        self.state.conversation_file = None
+        self.state.conversation = None
 
         # Token usage tracking
         self.state.input_tokens = 0
@@ -139,6 +157,7 @@ class VTKPromptApp:
                 collection_name="vtk-examples",
                 database_path="./db/codesage-codesage-large-v2",
                 verbose=False,
+                conversation=self.state.conversation,
             )
         except ValueError as e:
             self.state.error_message = str(e)
@@ -257,17 +276,15 @@ class VTKPromptApp:
 
     def _generate_and_execute_code(self):
         """Generate VTK code using Anthropic API and execute it."""
-        if not self.state.query_text.strip():
-            self.state.error_message = "Please enter a query"
-            return
-
         self.state.is_loading = True
         self.state.error_message = ""
 
         try:
             # Generate code using prompt functionality - reuse existing methods
-            post_prompt = get_ui_post_prompt()
-            enhanced_query = post_prompt + self.state.query_text
+            enhanced_query = self.state.query_text
+            if self.state.query_text:
+                post_prompt = get_ui_post_prompt()
+                enhanced_query = post_prompt + self.state.query_text
 
             # Reinitialize client with current settings
             self._init_prompt_client()
@@ -285,6 +302,8 @@ class VTKPromptApp:
                 rag=self.state.use_rag,
                 retry_attempts=int(self.state.retry_attempts),
             )
+            # Keep UI in sync with conversation
+            self.state.conversation = self.prompt_client.conversation
 
             # Handle both code and usage information
             if isinstance(result, tuple) and len(result) == 2:
@@ -353,6 +372,26 @@ class VTKPromptApp:
 
         except Exception as e:
             self.state.error_message = f"Error executing code: {str(e)}"
+
+    @change("conversation_object")
+    def on_conversation_file_data_change(self, conversation_object, **_):
+        invalid = (
+            conversation_object is None
+            or conversation_object["type"] != "application/json"
+            or Path(conversation_object["name"]).suffix != ".json"
+        )
+        self.state.conversation = (
+            None if invalid else json.loads(conversation_object["content"])
+        )
+        self.state.conversation_file = None if invalid else conversation_object["name"]
+        if not invalid and self.state.auto_run_conversation_file:
+            self.generate_code()
+
+    @trigger("save_conversation")
+    def save_conversation(self):
+        if self.prompt_client is None:
+            return ""
+        return json.dumps(self.prompt_client.conversation, indent=2)
 
     def _build_ui(self):
         """Build a simplified Vuetify UI."""
@@ -554,6 +593,64 @@ class VTKPromptApp:
                                 prepend_icon="mdi-repeat",
                             )
 
+                    with vuetify.VCard(classes="mt-2"):
+                        vuetify.VCardTitle(
+                            "⚙️ Files", hide_details=True, density="compact"
+                        )
+                        with vuetify.VCardText():
+                            vuetify.VCheckbox(
+                                label="Run new conversation files",
+                                v_model=("auto_run_conversation_file", True),
+                                prepend_icon="mdi-file-refresh-outline",
+                                density="compact",
+                                color="primary",
+                                hide_details=True,
+                            )
+                            with html.Div(
+                                classes="d-flex align-center justify-space-between"
+                            ):
+                                with vuetify.VTooltip(
+                                    text=("conversation_file", "No file loaded"),
+                                    location="top",
+                                    disabled=("!conversation_object",),
+                                ):
+                                    with vuetify.Template(v_slot_activator="{ props }"):
+                                        vuetify.VFileInput(
+                                            label="Conversation File",
+                                            v_model=("conversation_object", None),
+                                            accept=".json",
+                                            density="compact",
+                                            variant="solo",
+                                            prepend_icon="mdi-forum-outline",
+                                            hide_details="auto",
+                                            classes="py-1 pr-1 mr-1 text-truncate",
+                                            open_on_focus=False,
+                                            clearable=False,
+                                            v_bind="props",
+                                            rules=[
+                                                "[utils.vtk_prompt.rules.json_file]"
+                                            ],
+                                        )
+                                with vuetify.VTooltip(
+                                    text="Download conversation file",
+                                    location="right",
+                                ):
+                                    with vuetify.Template(v_slot_activator="{ props }"):
+                                        with vuetify.VBtn(
+                                            icon=True,
+                                            density="comfortable",
+                                            color="secondary",
+                                            rounded="lg",
+                                            v_bind="props",
+                                            disabled=("!conversation",),
+                                            click="utils.download("
+                                            + "`${model}_${new Date().toISOString()}.json`,"
+                                            + "trigger('save_conversation'),"
+                                            + "'application/json'"
+                                            + ")",
+                                        ):
+                                            vuetify.VIcon("mdi-file-download-outline")
+
             with layout.content:
                 with vuetify.VContainer(fluid=True, classes="fill-height"):
                     with vuetify.VRow(rows=12, classes="fill-height"):
@@ -653,9 +750,10 @@ class VTKPromptApp:
                                                 "Generate Code",
                                                 color="primary",
                                                 block=True,
-                                                loading=("is_loading", False),
+                                                loading=("trame__busy", False),
                                                 click=self.generate_code,
                                                 classes="mb-2",
+                                                disabled=("!query_text.trim()",),
                                             )
 
             vuetify.VAlert(
