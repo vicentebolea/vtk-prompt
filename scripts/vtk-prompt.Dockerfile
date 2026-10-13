@@ -15,7 +15,11 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PYTHONUNBUFFERED=1
 
 # No display in this container: force VTK's OSMesa software rasterizer, since
-# the default GLX backend segfaults without an X server.
+# the default GLX backend segfaults without an X server. The VTK wheel does not
+# bundle libOSMesa, so install it from the distribution.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libosmesa6 && \
+    rm -rf /var/lib/apt/lists/*
 ENV VTK_DEFAULT_OPENGL_WINDOW=vtkOSOpenGLRenderWindow
 
 WORKDIR /app

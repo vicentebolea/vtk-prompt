@@ -129,7 +129,7 @@ export ANTHROPIC_API_KEY=...   # or OPENAI_API_KEY
 docker compose up --build      # UI at http://localhost:8080
 ```
 
-A `ghcr.io/kitware/vtk-prompt` image is also built from every commit on master.
+A `ghcr.io/kitware/vtk-prompt/vtk-prompt` image is also built from every commit on master.
 
 ### vtk-mcp Integration
 
