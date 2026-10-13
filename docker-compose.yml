@@ -15,7 +15,7 @@ services:
       - qdrant_data:/qdrant/storage
 
   vtk-mcp:
-    image: ghcr.io/kitware/vtk-mcp:latest
+    image: ghcr.io/kitware/vtk-mcp/vtk-mcp:latest
     environment:
       VTK_MCP_TRANSPORT: http
       VTK_MCP_HTTP_PORT: "8000"
@@ -36,7 +36,7 @@ services:
     build:
       context: .
       dockerfile: scripts/vtk-prompt.Dockerfile
-    image: ghcr.io/kitware/vtk-prompt:latest
+    image: ghcr.io/kitware/vtk-prompt/vtk-prompt:latest
     environment:
       VTK_PROMPT_CONFIG: /app/scripts/vtk-prompt-compose.yml
       ANTHROPIC_API_KEY:
