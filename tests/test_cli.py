@@ -8,7 +8,6 @@ import pytest
 from click.testing import CliRunner
 
 from vtk_prompt.cli import main
-from vtk_prompt.client import VTKPromptClient
 
 
 class TestCLI:
@@ -29,7 +28,7 @@ class TestCLI:
 
     def test_basic_execution(self):
         """Test basic CLI execution."""
-        with patch.object(VTKPromptClient, "__new__") as mock_new:
+        with patch("vtk_prompt.cli.VTKPromptClient") as mock_new:
             mock_client = Mock()
             mock_new.return_value = mock_client
             mock_client.query.return_value = ("explanation", "code", None)
@@ -51,7 +50,7 @@ class TestCLI:
     )
     def test_provider_base_urls(self, provider, expected_url):
         """Test provider base URL defaults."""
-        with patch.object(VTKPromptClient, "__new__") as mock_new:
+        with patch("vtk_prompt.cli.VTKPromptClient") as mock_new:
             mock_client = Mock()
             mock_new.return_value = mock_client
             mock_client.query.return_value = ("explanation", "code", None)
@@ -70,7 +69,7 @@ class TestCLI:
         """Test temperature override for unsupported models."""
         mock_supports_temp.return_value = False
 
-        with patch.object(VTKPromptClient, "__new__") as mock_new:
+        with patch("vtk_prompt.cli.VTKPromptClient") as mock_new:
             mock_client = Mock()
             mock_new.return_value = mock_client
             mock_client.query.return_value = ("explanation", "code", None)
@@ -86,7 +85,7 @@ class TestCLI:
 
     def test_max_tokens_error(self):
         """Test max_tokens error handling."""
-        with patch.object(VTKPromptClient, "__new__") as mock_new:
+        with patch("vtk_prompt.cli.VTKPromptClient") as mock_new:
             mock_client = Mock()
             mock_new.return_value = mock_client
             mock_client.query.side_effect = ValueError("max_tokens exceeded")
@@ -106,7 +105,7 @@ class TestCLI:
     )
     def test_provider_model_defaults(self, provider, expected_model):
         """Test provider model defaults."""
-        with patch.object(VTKPromptClient, "__new__") as mock_new:
+        with patch("vtk_prompt.cli.VTKPromptClient") as mock_new:
             mock_client = Mock()
             mock_new.return_value = mock_client
             mock_client.query.return_value = ("explanation", "code", None)
@@ -147,7 +146,7 @@ class TestCLI:
 
     def test_general_error_handling(self):
         """Test general error handling."""
-        with patch.object(VTKPromptClient, "__new__") as mock_new:
+        with patch("vtk_prompt.cli.VTKPromptClient") as mock_new:
             mock_client = Mock()
             mock_new.return_value = mock_client
             mock_client.query.side_effect = ValueError("Some general error")

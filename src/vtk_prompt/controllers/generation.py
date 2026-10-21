@@ -183,8 +183,9 @@ async def generate_and_execute_code(app: Any, origin_session_id: str = "") -> No
             app.state.query_text = ""
             # Record the prompt in the conversation immediately, so switching away
             # mid-generation still snapshots what this conversation is about.
+            prior_messages = list(app.state.conversation or [])
             if enhanced_query:
-                app.state.conversation = list(app.state.conversation or []) + [
+                app.state.conversation = prior_messages + [
                     {"role": "user", "content": enhanced_query}
                 ]
             app.state.flush()
@@ -210,7 +211,11 @@ async def generate_and_execute_code(app: Any, origin_session_id: str = "") -> No
 
             # This generation works on its own copy; it is adopted as the
             # conversation only if this is still the active one when it finishes.
-            messages = list(app.state.conversation or [])
+            # Start from the conversation as it was before this prompt: the client
+            # adds the system prompt, context and the user turn itself, and takes a
+            # conversation that already holds the prompt for a follow-up with
+            # nothing to add.
+            messages = list(prior_messages)
             result = await asyncio.to_thread(
                 app.prompt_client.query,
                 enhanced_query,
